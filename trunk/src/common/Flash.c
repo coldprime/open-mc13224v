@@ -6,24 +6,20 @@
  */
 #include "Flash.h"
 
-#include <stdint.h>
-
-#include "Crm.h"
-
-
 void
 FlashStartReg(void)
 {
-  volatile uint32_t counter;
+  volatile unsigned long counter;
 
-  VregCntl &= (~BUCK_EN);
-  VregCntl |= BUCK_BYPASS_EN;
+//  VregCntl &= (~BUCK_EN);
+//  VregCntl |= BUCK_BYPASS_EN;
 
   counter = 18200;
   while(counter--);
 
-  VregCntl |= VREG_1P8V_EN;
+//  VregCntl |= VREG_1P8V_EN;
   counter = 5200;
   while(counter--);
 }
+
 

@@ -35,6 +35,7 @@
 <option id="gnu.c.compiler.option.preprocessor.nostdinc.1540364168" name="Do not search system directories (-nostdinc)" superClass="gnu.c.compiler.option.preprocessor.nostdinc" value="false" valueType="boolean"/>
 <option id="gnu.c.compiler.option.include.paths.948491713" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
 <listOptionValue builtIn="false" value="&quot;../src/interface/ROM_2_0&quot;"/>
+<listOptionValue builtIn="false" value="../src/common"/>
 </option>
 <option id="gnu.c.compiler.option.misc.other.1698584199" name="Other flags" superClass="gnu.c.compiler.option.misc.other" value="-c -fmessage-length=0 -fno-strict-aliasing  -fno-common -ffixed-r8 -msoft-float -mcpu=arm7tdmi-s -mthumb-interwork -march=armv4t -mthumb -mcallee-super-interworking -mtune=arm7tdmi-s" valueType="string"/>
 <inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.cygwin.217619237" superClass="cdt.managedbuild.tool.gnu.c.compiler.input.cygwin"/>
@@ -346,6 +347,7 @@
 <option id="gnu.c.compiler.option.preprocessor.nostdinc.1137931661" name="Do not search system directories (-nostdinc)" superClass="gnu.c.compiler.option.preprocessor.nostdinc" value="false" valueType="boolean"/>
 <option id="gnu.c.compiler.option.include.paths.2084076793" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
 <listOptionValue builtIn="false" value="&quot;../src/interface/ROM_2_0&quot;"/>
+<listOptionValue builtIn="false" value="../src/common"/>
 </option>
 <option id="gnu.c.compiler.option.misc.other.1886029754" name="Other flags" superClass="gnu.c.compiler.option.misc.other" value="-c -fmessage-length=0 -fno-strict-aliasing  -fno-common -ffixed-r8 -msoft-float -mcpu=arm7tdmi-s -mthumb-interwork -march=armv4t -mthumb -mcallee-super-interworking -mtune=arm7tdmi-s" valueType="string"/>
 <inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.cygwin.1649924228" superClass="cdt.managedbuild.tool.gnu.c.compiler.input.cygwin"/>
@@ -642,7 +644,7 @@
 <targetPlatform binaryParser="org.eclipse.cdt.core.GNU_ELF" id="cdt.managedbuild.target.gnu.platform.cygwin.exe.release.79588000" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.cygwin.exe.release"/>
 <builder buildPath="${workspace_loc:/mc13224-louis/Release}" id="cdt.managedbuild.target.gnu.builder.cygwin.exe.release.1311597802" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="cdt.managedbuild.target.gnu.builder.cygwin.exe.release"/>
 <tool command="arm-elf-as" commandLinePattern="${COMMAND} ${FLAGS} ${OUTPUT_FLAG}${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" id="cdt.managedbuild.tool.gnu.assembler.cygwin.exe.release.1302001902" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.cygwin.exe.release">
-<option id="gnu.both.asm.option.flags.1062201559" name="Assembler flags" superClass="gnu.both.asm.option.flags" value="-mcpu=arm7tdmi-s -march=armv4t -g" valueType="string"/>
+<option id="gnu.both.asm.option.flags.1062201559" name="Assembler flags" superClass="gnu.both.asm.option.flags" value="-mcpu=arm7tdmi-s -march=armv4t -mthumb-interwork -mfpu=softfpa -g" valueType="string"/>
 <inputType id="cdt.managedbuild.tool.gnu.assembler.input.2082564334" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 </tool>
 <tool command="arm-elf-ld" id="cdt.managedbuild.tool.gnu.archiver.cygwin.base.1389567796" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.cygwin.base"/>
@@ -656,6 +658,7 @@
 <option id="gnu.c.compiler.option.preprocessor.nostdinc.716936952" name="Do not search system directories (-nostdinc)" superClass="gnu.c.compiler.option.preprocessor.nostdinc" value="false" valueType="boolean"/>
 <option id="gnu.c.compiler.option.include.paths.1393559783" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
 <listOptionValue builtIn="false" value="&quot;../src/interface/ROM_2_0&quot;"/>
+<listOptionValue builtIn="false" value="../src/common"/>
 </option>
 <option id="gnu.c.compiler.option.misc.other.882267519" name="Other flags" superClass="gnu.c.compiler.option.misc.other" value="-c -fmessage-length=0 -fno-strict-aliasing  -fno-common -ffixed-r8 -msoft-float -mcpu=arm7tdmi-s -mthumb-interwork -march=armv4t -mthumb -mcallee-super-interworking -mtune=arm7tdmi-s" valueType="string"/>
 <inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.cygwin.1487316877" superClass="cdt.managedbuild.tool.gnu.c.compiler.input.cygwin"/>
