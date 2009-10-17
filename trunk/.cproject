@@ -668,7 +668,7 @@
 <option id="gnu.c.link.option.nostdlibs.773008530" name="No startup or default libs (-nostdlib)" superClass="gnu.c.link.option.nostdlibs" value="true" valueType="boolean"/>
 <option id="gnu.c.link.option.noshared.1854289583" name="No shared libraries (-static)" superClass="gnu.c.link.option.noshared" value="true" valueType="boolean"/>
 <option id="gnu.c.link.option.userobjs.282191622" name="Other objects" superClass="gnu.c.link.option.userobjs" valueType="userObjs">
-<listOptionValue builtIn="false" value="../lib/LLC_2_1.a"/>
+<listOptionValue builtIn="false" value="../library/LLC_2_1.a"/>
 </option>
 <option id="gnu.c.link.option.ldflags.136156570" name="Linker flags" superClass="gnu.c.link.option.ldflags" value="-T ../scripts/ld/RAMROM.lds" valueType="string"/>
 <inputType id="cdt.managedbuild.tool.gnu.c.linker.input.113413000" superClass="cdt.managedbuild.tool.gnu.c.linker.input">
