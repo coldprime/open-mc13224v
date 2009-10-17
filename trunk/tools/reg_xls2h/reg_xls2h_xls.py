@@ -157,7 +157,6 @@ class xls_register:
 
         self.hw = hw
         self.sw = sw
-        self.rf = None
 
     def add_bit(self, name, bitpos, reset, hw, sw):
         # check if there is a bit at this position
@@ -495,13 +494,6 @@ class xls:
         self.xlsname = xlsname
         # save the name of the excel sheet
         self.sheetname = sheetname
-        # save the register format
-        if sheetname == 'Registers':
-            self.type = 'normal'
-        elif sheetname == 'RF':
-            self.type = 'RF'
-        else:
-            self.type = 'modem'
 
         # open the work book
         self.wbook = xlrd.open_workbook(self.xlsname)
@@ -531,130 +523,49 @@ class xls:
         # loop on all the rows of the sheet
         while cur_row < self.wsheet.nrows:
 
-            # check if we are parsing modem registers
-            if self.type != 'normal':
-                # MODEM and RF registers
+            # if the current row column 0 is not empty
+            if self.wsheet.cell_type(cur_row, 0) != xlrd.XL_CELL_EMPTY:
+                # retrieve the column 0 value
+                cur_value = self.wsheet.cell_value(cur_row, 0)
 
-                # if the current row column 1 is not empty
-                if self.wsheet.cell_type(cur_row, 1) != xlrd.XL_CELL_EMPTY:
-                    # retrieve the column 1 value
-                    cur_value = self.wsheet.cell_value(cur_row, 1).strip()
+                if cur_value == "Address":
+                    # create a new register with name and address
+                    self.cur_block.start_register(self.wsheet.cell_value(cur_row, 3),
+                                                  self.wsheet.cell_value(cur_row+2, 0),
+                                                  self.wsheet.cell_value(cur_row+2, 1),
+                                                  self.wsheet.cell_value(cur_row+2, 2))
 
-                    if (cur_value != "Register Name") and (cur_value != ""):
-                        # create a new register with name and address
+                    # pass the register line
+                    cur_row += 1
 
-                        self.cur_block.start_register(cur_value,
-                                                      self.wsheet.cell_value(cur_row, 2),
-                                                      "X",
-                                                      "X")
-
-                        if self.type == 'RF':
-                            (str_size, str_ch) = self.wsheet.cell_value(cur_row+1, 2).split()
-                            if str_size == 'long':
-                                self.cur_block.cur_reg.addr |= 1 << 6
-                            elif str_size != 'short':
-                                print("""ERROR: cell "%s", unexpected length type"""%
-                                    (xlrd.cellname(cur_row+1,2), ))
-                            if str_ch == 'A':
-                                self.cur_block.cur_reg.rf = 1          #bit 0 for 'A'
-                            elif str_ch == 'ABC':
-                                self.cur_block.cur_reg.rf = 7          #bits 2:1:0 for 'CBA'
-                            else:
-                                print("""ERROR: cell "%s", unexpected channel type"""%
-                                    (xlrd.cellname(cur_row+1,2), ))
-
-                            self.cur_block.cur_reg.sw = 'W' # workaround
+                    # parse the bits of the register
+                    for cur_col in range(3, 35):
+                        # check the bit number
+                        try:
+                            bitpos = int(self.wsheet.cell_value(cur_row, cur_col))
+                        except:
+                            print("""ERROR: cell "%s", unexpected bit value"""%
+                                (xlrd.cellname(cur_row,cur_col), ))
+                            bitpos = 0
+                        # check if there is a correct bit number at this column
+                        if bitpos == (34 - cur_col):
+                            # add the bit with the name, the bit position and reset value
+                            self.cur_block.add_bit(self.wsheet.cell_value(cur_row + 1, cur_col),
+                                                   bitpos,
+                                                   self.wsheet.cell_value(cur_row + 2, cur_col),
+                                                   self.wsheet.cell_value(cur_row + 4, cur_col),
+                                                   self.wsheet.cell_value(cur_row + 5, cur_col))
                         else:
-                            reg_ch = None
+                            print("""ERROR: cell "%s", unexpected bit value "%s" """%
+                                (xlrd.cellname(cur_row,cur_col), bitpos))
 
+                    # pass six rows
+                    cur_row += 6
 
-                        # find the number of fields in the register
-                        start_row = cur_row
-                        end_row = start_row + 1
-                        while (end_row < self.wsheet.nrows) \
-                            and (self.wsheet.cell_value(end_row, 3) != "") \
-                            and (self.wsheet.cell_value(end_row, 1) == ""):
-                                end_row += 1
-
-                        # loop on all the fields of the register
-                        while cur_row < end_row:
-                            fieldname = self.wsheet.cell_value(cur_row, 5).strip()
-                            if fieldname != "":
-                                try:
-                                    startbit = int(self.wsheet.cell_value(cur_row, 7))
-                                except:
-                                    sys.exit("Can not parse field start bit (%s) @ %s"%
-                                             (self.wsheet.cell_value(cur_row, 7),xlrd.cellname(cur_row, 7)))
-
-                                if self.wsheet.cell_value(cur_row, 8) == "":
-                                    endbit = startbit
-                                else:
-                                    try:
-                                        endbit = int(self.wsheet.cell_value(cur_row, 8))
-                                    except:
-                                        sys.exit("Can not parse field end bit (%s)"%(self.wsheet.cell_value(cur_row, 8),))
-
-                                # sanity check
-                                assert(startbit >= endbit)
-
-                                # add the field to the register
-                                self.cur_block.add_field(fieldname, startbit, endbit,
-                                                         self.wsheet.cell_value(cur_row, 9),
-                                                         self.wsheet.cell_value(cur_row, 4),
-                                                         self.wsheet.cell_value(cur_row, 3))
-
-                            cur_row += 1
-
-                        # set the last row
-                        cur_row = end_row - 1
-                        # finish the register
-                        self.cur_block.end_register()
-            else:
-                # Non MODEM registers
-
-                # if the current row column 0 is not empty
-                if self.wsheet.cell_type(cur_row, 0) != xlrd.XL_CELL_EMPTY:
-                    # retrieve the column 0 value
-                    cur_value = self.wsheet.cell_value(cur_row, 0)
-
-                    if cur_value == "Address":
-                        # create a new register with name and address
-                        self.cur_block.start_register(self.wsheet.cell_value(cur_row, 3),
-                                                      self.wsheet.cell_value(cur_row+2, 0),
-                                                      self.wsheet.cell_value(cur_row+2, 1),
-                                                      self.wsheet.cell_value(cur_row+2, 2))
-
-                        # pass the register line
-                        cur_row += 1
-
-                        # parse the bits of the register
-                        for cur_col in range(3, 35):
-                            # check the bit number
-                            try:
-                                bitpos = int(self.wsheet.cell_value(cur_row, cur_col))
-                            except:
-                                print("""ERROR: cell "%s", unexpected bit value"""%
-                                    (xlrd.cellname(cur_row,cur_col), ))
-                                bitpos = 0
-                            # check if there is a correct bit number at this column
-                            if bitpos == (34 - cur_col):
-                                # add the bit with the name, the bit position and reset value
-                                self.cur_block.add_bit(self.wsheet.cell_value(cur_row + 1, cur_col),
-                                                       bitpos,
-                                                       self.wsheet.cell_value(cur_row + 2, cur_col),
-                                                       self.wsheet.cell_value(cur_row + 4, cur_col),
-                                                       self.wsheet.cell_value(cur_row + 5, cur_col))
-                            else:
-                                print("""ERROR: cell "%s", unexpected bit value "%s" """%
-                                    (xlrd.cellname(cur_row,cur_col), bitpos))
-
-                        # pass six rows
-                        cur_row += 6
-
-                        # finish the register
-                        self.cur_block.end_register()
-                    else:
-                        print("""ERROR: cell "%s", unexpected value "%s" """%(xlrd.cellname(cur_row,0), cur_value))
+                    # finish the register
+                    self.cur_block.end_register()
+                else:
+                    print("""ERROR: cell "%s", unexpected value "%s" """%(xlrd.cellname(cur_row,0), cur_value))
 
             cur_row += 1
 

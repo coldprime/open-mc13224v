@@ -179,9 +179,6 @@ class header:
             fout.write("#include \"reg_sim.h\"\n")
         fout.write("\n")
 
-        if xls.type == 'RF':
-            fout.write("static void phy_reg_write(uint32_t addr, uint32_t ch, uint32_t value);\n\n")
-
         if gendoc:
             fout.write("/** @brief Base address of the %s peripheral from CPU's point of view.\n"%(blockname, ))
             fout.write(" * @ingroup %s\n"%(groupname, ))
@@ -254,27 +251,22 @@ class header:
                 fout.write(" * @ingroup %s\n"%(groupname,))
             fout.write(" */\n")
 
-            if not reg.rf:
-                if not forsimu:
-                    if reg.multi:
-                        fout.write(  (  "#define %s_REG(i)    "
-                                      + "(* (((volatile uint32_t *)0x%08X) + i) )\n")
-                                   % (regname, (reg.addr + self.regaddr)))
-                    else:
-                        fout.write(  "#define %s_REG    (*(volatile uint32_t *)(0x%08X))\n"
-                                   % (regname, (reg.addr + self.regaddr)))
-
-                    fout.write("#define %s_ADDR   0x%08X\n"%(regname, (reg.addr + self.regaddr)))
-                    fout.write("#define %s_OFFSET 0x%08X\n"%(regname, (reg.addr)))
-                fout.write("#define %s_INDEX  0x%08X\n"%(regname, (reg.addr/4)))
+            if not forsimu:
                 if reg.multi:
-                    fout.write("#define %s_COUNT  %d\n\n"%(regname, reg.max - reg.min + 1))
+                    fout.write(  (  "#define %s_REG(i)    "
+                                  + "(* (((volatile uint32_t *)0x%08X) + i) )\n")
+                               % (regname, (reg.addr + self.regaddr)))
                 else:
-                    fout.write("\n")
+                    fout.write(  "#define %s_REG    (*(volatile uint32_t *)(0x%08X))\n"
+                               % (regname, (reg.addr + self.regaddr)))
+
+                fout.write("#define %s_ADDR   0x%08X\n"%(regname, (reg.addr + self.regaddr)))
+                fout.write("#define %s_OFFSET 0x%08X\n"%(regname, (reg.addr)))
+            fout.write("#define %s_INDEX  0x%08X\n"%(regname, (reg.addr/4)))
+            if reg.multi:
+                fout.write("#define %s_COUNT  %d\n\n"%(regname, reg.max - reg.min + 1))
             else:
-                # RF reg
-                fout.write("#define %s_RF_ADDR 0x%02X\n"%(regname, reg.addr))
-                fout.write("#define %s_RF_CH   %d\n\n"%(regname, reg.rf))
+                fout.write("\n")
 
             if reg.multi:
                 param_beg = "uint32_t idx, "
@@ -283,23 +275,7 @@ class header:
                 param_beg = ""
                 param_one = "void"
 
-            if reg.rf:
-                if reg.rf == 7:
-                    param_beg = "uint32_t ch, "
-                    param_one = "uint32_t ch"
-                    param_ch = "ch"
-                else:
-                    param_beg = ""
-                    param_one = "void"
-                    param_ch = "1"
-
-                # RF reg read/write macro setup
-                #reg_rd = "rf_raw_read(%s_INDEX)"%(sim_read, regname)
-                reg_wr_beg = "phy_reg_write(%s_RF_ADDR, %s, "%(regname, param_ch)
-                reg_wr_end = ")"
-
-
-            elif not forsimu:
+            if not forsimu:
                 # normal reg read/write macro setup
                 if reg.multi:
                     reg_rd = "%s_REG(idx)"%(regname)
@@ -337,7 +313,7 @@ class header:
                 func_set_name = "set"
 
             # REG_get function
-            if reg.sw != 'W' and reg.gen_read and not reg.rf:
+            if reg.sw != 'W' and reg.gen_read:
                 if gendoc:
                     fout.write("/**\n")
                     fout.write(" * @brief Returns the current value of the %s register.\n"%(regname,))
@@ -459,7 +435,7 @@ class header:
 
             # loop on all the fields to generate the field related
             for field in reg.fields:
-                if field.sw != 'W' and reg.gen_read and not reg.rf:
+                if field.sw != 'W' and reg.gen_read:
                     if gendoc:
                         fout.write("/**\n")
                         fout.write(" * @brief Returns the current value of the %s field in the %s register.\n"%(field.name, regname))
@@ -482,7 +458,7 @@ class header:
 
 
                 # only provide set functionality to writable fields
-                if field.writable and not reg.rf:
+                if field.writable:
                     if gendoc:
                         fout.write("/**\n")
                         fout.write(" * @brief Sets the %s field of the %s register.\n"%(field.name, regname))
