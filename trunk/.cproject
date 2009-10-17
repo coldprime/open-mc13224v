@@ -15,7 +15,7 @@
 </extensions>
 </storageModule>
 <storageModule moduleId="cdtBuildSystem" version="4.0.0">
-<configuration artifactExtension="elf" artifactName="mc13224-louis" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.cygwin.exe.debug.1998595174" name="ROM_2_0" parent="cdt.managedbuild.config.gnu.cygwin.exe.debug">
+<configuration artifactExtension="elf" artifactName="image" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.cygwin.exe.debug.1998595174" name="ROM_2_0" parent="cdt.managedbuild.config.gnu.cygwin.exe.debug" postannouncebuildStep="Generate the image files for the various tools" postbuildStep="python ../tools/buildimages/buildimages.py -o image image.elf" preannouncebuildStep="Build the register files" prebuildStep="cd ../docs/registers; make">
 <folderInfo id="cdt.managedbuild.config.gnu.cygwin.exe.debug.1998595174." name="/" resourcePath="">
 <toolChain id="cdt.managedbuild.toolchain.gnu.cygwin.exe.debug.1801517578" name="Cygwin GCC" superClass="cdt.managedbuild.toolchain.gnu.cygwin.exe.debug">
 <targetPlatform binaryParser="org.eclipse.cdt.core.GNU_ELF" id="cdt.managedbuild.target.gnu.platform.cygwin.exe.debug.1745682911" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.cygwin.exe.debug"/>
@@ -47,7 +47,7 @@
 <option id="gnu.c.link.option.nostart.824021792" name="Do not use standard start files (-nostartfiles)" superClass="gnu.c.link.option.nostart" value="true" valueType="boolean"/>
 <option id="gnu.c.link.option.ldflags.1256434000" name="Linker flags" superClass="gnu.c.link.option.ldflags" value="-T ../scripts/ld/RAMROM.lds" valueType="string"/>
 <option id="gnu.c.link.option.userobjs.809610233" name="Other objects" superClass="gnu.c.link.option.userobjs" valueType="userObjs">
-<listOptionValue builtIn="false" value="../lib/LLC_2_0.a"/>
+<listOptionValue builtIn="false" value="../libraries/LLC_2_0.a"/>
 </option>
 <inputType id="cdt.managedbuild.tool.gnu.c.linker.input.195316189" superClass="cdt.managedbuild.tool.gnu.c.linker.input">
 <additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
@@ -327,7 +327,7 @@
 </extensions>
 </storageModule>
 <storageModule moduleId="cdtBuildSystem" version="4.0.0">
-<configuration artifactExtension="elf" artifactName="mc13224-louis" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.release,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.cygwin.exe.release.1862423701" name="ROM_2_1" parent="cdt.managedbuild.config.gnu.cygwin.exe.release" postbuildStep="python ../tools/buildimages/buildimages.py -o image mc13224-louis.elf">
+<configuration artifactExtension="elf" artifactName="image" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.release,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.cygwin.exe.release.1862423701" name="ROM_2_1" parent="cdt.managedbuild.config.gnu.cygwin.exe.release" postannouncebuildStep="Generate the image files for the various tools" postbuildStep="python ../tools/buildimages/buildimages.py -o image image.elf" preannouncebuildStep="Build the register files" prebuildStep="cd ../docs/registers; make">
 <folderInfo id="cdt.managedbuild.config.gnu.cygwin.exe.release.1862423701." name="/" resourcePath="">
 <toolChain id="cdt.managedbuild.toolchain.gnu.cygwin.exe.release.778258324" name="Cygwin GCC" superClass="cdt.managedbuild.toolchain.gnu.cygwin.exe.release">
 <targetPlatform binaryParser="org.eclipse.cdt.core.GNU_ELF" id="cdt.managedbuild.target.gnu.platform.cygwin.exe.release.632942430" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.cygwin.exe.release"/>
@@ -357,7 +357,7 @@
 <option id="gnu.c.link.option.nostdlibs.1259016224" name="No startup or default libs (-nostdlib)" superClass="gnu.c.link.option.nostdlibs" value="true" valueType="boolean"/>
 <option id="gnu.c.link.option.noshared.172186562" name="No shared libraries (-static)" superClass="gnu.c.link.option.noshared" value="true" valueType="boolean"/>
 <option id="gnu.c.link.option.userobjs.1416648393" name="Other objects" superClass="gnu.c.link.option.userobjs" valueType="userObjs">
-<listOptionValue builtIn="false" value="../lib/LLC_2_1.a"/>
+<listOptionValue builtIn="false" value="../libraries/LLC_2_1.a"/>
 </option>
 <option id="gnu.c.link.option.ldflags.1690041681" name="Linker flags" superClass="gnu.c.link.option.ldflags" value="-T ../scripts/ld/RAMROM.lds" valueType="string"/>
 <inputType id="cdt.managedbuild.tool.gnu.c.linker.input.1331831164" superClass="cdt.managedbuild.tool.gnu.c.linker.input">
@@ -638,7 +638,7 @@
 </extensions>
 </storageModule>
 <storageModule moduleId="cdtBuildSystem" version="4.0.0">
-<configuration artifactExtension="elf" artifactName="mc13224-louis" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.release,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.cygwin.exe.release.1862423701.1903133016" name="flasher_2_1" parent="cdt.managedbuild.config.gnu.cygwin.exe.release" postbuildStep="python ../tools/buildimages/buildimages.py -o image mc13224-louis.elf">
+<configuration artifactExtension="elf" artifactName="image" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.release,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.cygwin.exe.release.1862423701.1903133016" name="flasher_2_1" parent="cdt.managedbuild.config.gnu.cygwin.exe.release" postannouncebuildStep="Generate the image files for the various tools" postbuildStep="python ../tools/buildimages/buildimages.py -o image image.elf" preannouncebuildStep="Build the register files" prebuildStep="cd ../docs/registers; make">
 <folderInfo id="cdt.managedbuild.config.gnu.cygwin.exe.release.1862423701.1903133016." name="/" resourcePath="">
 <toolChain id="cdt.managedbuild.toolchain.gnu.cygwin.exe.release.932233756" name="Cygwin GCC" superClass="cdt.managedbuild.toolchain.gnu.cygwin.exe.release">
 <targetPlatform binaryParser="org.eclipse.cdt.core.GNU_ELF" id="cdt.managedbuild.target.gnu.platform.cygwin.exe.release.79588000" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.cygwin.exe.release"/>
@@ -668,7 +668,7 @@
 <option id="gnu.c.link.option.nostdlibs.773008530" name="No startup or default libs (-nostdlib)" superClass="gnu.c.link.option.nostdlibs" value="true" valueType="boolean"/>
 <option id="gnu.c.link.option.noshared.1854289583" name="No shared libraries (-static)" superClass="gnu.c.link.option.noshared" value="true" valueType="boolean"/>
 <option id="gnu.c.link.option.userobjs.282191622" name="Other objects" superClass="gnu.c.link.option.userobjs" valueType="userObjs">
-<listOptionValue builtIn="false" value="../library/LLC_2_1.a"/>
+<listOptionValue builtIn="false" value="../libraries/LLC_2_1.a"/>
 </option>
 <option id="gnu.c.link.option.ldflags.136156570" name="Linker flags" superClass="gnu.c.link.option.ldflags" value="-T ../scripts/ld/RAMROM.lds" valueType="string"/>
 <inputType id="cdt.managedbuild.tool.gnu.c.linker.input.113413000" superClass="cdt.managedbuild.tool.gnu.c.linker.input">
