@@ -21,6 +21,8 @@
 #include "UartLowLevel.h"
 #include "Flash.h"
 
+#include "reg_uart1.h"
+
 const char nibble[16]={'0','1','2','3','4','5','6','7', '8','9','a','b','c','d','e','f'};
 
 static void

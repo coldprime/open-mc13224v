@@ -174,7 +174,6 @@ class header:
         fout.write("#define %s\n\n"%define)
         fout.write("#include <stdint.h>\n")
         fout.write("#include \"compiler.h\"\n")
-        fout.write("#include \"arch.h\"\n")
         if forsimu:
             fout.write("#include \"reg_sim.h\"\n")
         fout.write("\n")
@@ -302,7 +301,7 @@ class header:
 
 
             if reg.multi:
-                func_beg = "{\n    ASSERT_ERR(idx <= %d);\n" % (reg.max)
+                func_beg = "{\n    ASSERT(idx <= %d);\n" % (reg.max)
             else:
                 func_beg = "{\n"
             func_end = "}\n\n"
@@ -387,7 +386,7 @@ class header:
                             fout.write(", ")
                     fout.write(func_beg)
                     for field in reg.writable_fields:
-                        fout.write("    ASSERT_ERR(((%s << %d) & ~0x%08X) == 0);\n"%(field.h_param, field.low_bitpos, field.mask))
+                        fout.write("    ASSERT(((%s << %d) & ~0x%08X) == 0);\n"%(field.h_param, field.low_bitpos, field.mask))
 
                     fout.write("    %s"%(reg_wr_beg))
 
@@ -427,7 +426,7 @@ class header:
                     fout.write("\n")
                     for field in reg.fields:
                         if len(reg.fields) == 1:
-                            fout.write("    ASSERT_ERR((localVal & ~0x%08X) == 0);\n"%(field.mask,))
+                            fout.write("    ASSERT((localVal & ~0x%08X) == 0);\n"%(field.mask,))
                             fout.write("    *%s = localVal >> %d;\n"%(field.h_param, field.low_bitpos))
                         else:
                             fout.write("    *%s = (localVal & 0x%08X) >> %d;\n"%(field.h_param, field.mask, field.low_bitpos))
@@ -450,7 +449,7 @@ class header:
 
                     # do not mask for single field
                     if len(reg.fields) == 1:
-                        fout.write("    ASSERT_ERR((localVal & ~0x%08X) == 0);\n"%(field.mask,))
+                        fout.write("    ASSERT((localVal & ~0x%08X) == 0);\n"%(field.mask,))
                         fout.write("    return (localVal >> %d);\n"%(field.low_bitpos,))
                     else:
                         fout.write("    return ((localVal & 0x%08X) >> %d);\n"%(field.mask, field.low_bitpos))
@@ -471,7 +470,7 @@ class header:
                                % (field_prefix.lower(), field.h_name.lower(), func_set_name,
                                   param_beg, field.type, field.h_param))
                     fout.write(func_beg)
-                    fout.write("    ASSERT_ERR(((%s << %d) & ~0x%08X) == 0);\n"%(field.h_param, field.low_bitpos, field.mask))
+                    fout.write("    ASSERT(((%s << %d) & ~0x%08X) == 0);\n"%(field.h_param, field.low_bitpos, field.mask))
 
                     # generate direct accesses for set/clear registers or single writable field field
                     if (reg.sw in ('S', 'C')) or (len(reg.writable_fields) == 1):

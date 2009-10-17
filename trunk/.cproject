@@ -15,7 +15,7 @@
 </extensions>
 </storageModule>
 <storageModule moduleId="cdtBuildSystem" version="4.0.0">
-<configuration artifactExtension="elf" artifactName="image" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.cygwin.exe.debug.1998595174" name="ROM_2_0" parent="cdt.managedbuild.config.gnu.cygwin.exe.debug" postannouncebuildStep="Generate the image files for the various tools" postbuildStep="python ../tools/buildimages/buildimages.py -o image image.elf" preannouncebuildStep="Build the register files" prebuildStep="cd ../docs/registers; make">
+<configuration artifactExtension="elf" artifactName="image" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.cygwin.exe.debug.1998595174" name="ROM_2_0" parent="cdt.managedbuild.config.gnu.cygwin.exe.debug" postannouncebuildStep="Generate the image files for the various tools" postbuildStep="python ../tools/buildimages/buildimages.py -o image image.elf" preannouncebuildStep="Build the register files" prebuildStep="cd ../docs/registers; make all">
 <folderInfo id="cdt.managedbuild.config.gnu.cygwin.exe.debug.1998595174." name="/" resourcePath="">
 <toolChain id="cdt.managedbuild.toolchain.gnu.cygwin.exe.debug.1801517578" name="Cygwin GCC" superClass="cdt.managedbuild.toolchain.gnu.cygwin.exe.debug">
 <targetPlatform binaryParser="org.eclipse.cdt.core.GNU_ELF" id="cdt.managedbuild.target.gnu.platform.cygwin.exe.debug.1745682911" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.cygwin.exe.debug"/>
@@ -35,7 +35,8 @@
 <option id="gnu.c.compiler.option.preprocessor.nostdinc.1540364168" name="Do not search system directories (-nostdinc)" superClass="gnu.c.compiler.option.preprocessor.nostdinc" value="false" valueType="boolean"/>
 <option id="gnu.c.compiler.option.include.paths.948491713" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
 <listOptionValue builtIn="false" value="&quot;../src/interface/ROM_2_0&quot;"/>
-<listOptionValue builtIn="false" value="../src/common"/>
+<listOptionValue builtIn="false" value="&quot;../src/common&quot;"/>
+<listOptionValue builtIn="false" value="&quot;../src/build/registers&quot;"/>
 </option>
 <option id="gnu.c.compiler.option.misc.other.1698584199" name="Other flags" superClass="gnu.c.compiler.option.misc.other" value="-c -fmessage-length=0 -fno-strict-aliasing  -fno-common -ffixed-r8 -msoft-float -mcpu=arm7tdmi-s -mthumb-interwork -march=armv4t -mthumb -mcallee-super-interworking -mtune=arm7tdmi-s" valueType="string"/>
 <inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.cygwin.217619237" superClass="cdt.managedbuild.tool.gnu.c.compiler.input.cygwin"/>
@@ -327,7 +328,7 @@
 </extensions>
 </storageModule>
 <storageModule moduleId="cdtBuildSystem" version="4.0.0">
-<configuration artifactExtension="elf" artifactName="image" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.release,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.cygwin.exe.release.1862423701" name="ROM_2_1" parent="cdt.managedbuild.config.gnu.cygwin.exe.release" postannouncebuildStep="Generate the image files for the various tools" postbuildStep="python ../tools/buildimages/buildimages.py -o image image.elf" preannouncebuildStep="Build the register files" prebuildStep="cd ../docs/registers; make">
+<configuration artifactExtension="elf" artifactName="image" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.release,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.cygwin.exe.release.1862423701" name="ROM_2_1" parent="cdt.managedbuild.config.gnu.cygwin.exe.release" postannouncebuildStep="Generate the image files for the various tools" postbuildStep="python ../tools/buildimages/buildimages.py -o image image.elf" preannouncebuildStep="Build the register files" prebuildStep="cd ../docs/registers; make all">
 <folderInfo id="cdt.managedbuild.config.gnu.cygwin.exe.release.1862423701." name="/" resourcePath="">
 <toolChain id="cdt.managedbuild.toolchain.gnu.cygwin.exe.release.778258324" name="Cygwin GCC" superClass="cdt.managedbuild.toolchain.gnu.cygwin.exe.release">
 <targetPlatform binaryParser="org.eclipse.cdt.core.GNU_ELF" id="cdt.managedbuild.target.gnu.platform.cygwin.exe.release.632942430" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.cygwin.exe.release"/>
@@ -346,8 +347,9 @@
 <option id="gnu.c.compiler.cygwin.exe.release.option.debugging.level.890759449" name="Debug Level" superClass="gnu.c.compiler.cygwin.exe.release.option.debugging.level" value="gnu.c.debugging.level.max" valueType="enumerated"/>
 <option id="gnu.c.compiler.option.preprocessor.nostdinc.1137931661" name="Do not search system directories (-nostdinc)" superClass="gnu.c.compiler.option.preprocessor.nostdinc" value="false" valueType="boolean"/>
 <option id="gnu.c.compiler.option.include.paths.2084076793" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
-<listOptionValue builtIn="false" value="&quot;../src/interface/ROM_2_0&quot;"/>
-<listOptionValue builtIn="false" value="../src/common"/>
+<listOptionValue builtIn="false" value="&quot;../src/interface/ROM_2_1&quot;"/>
+<listOptionValue builtIn="false" value="&quot;../src/common&quot;"/>
+<listOptionValue builtIn="false" value="&quot;../src/build/registers&quot;"/>
 </option>
 <option id="gnu.c.compiler.option.misc.other.1886029754" name="Other flags" superClass="gnu.c.compiler.option.misc.other" value="-c -fmessage-length=0 -fno-strict-aliasing  -fno-common -ffixed-r8 -msoft-float -mcpu=arm7tdmi-s -mthumb-interwork -march=armv4t -mthumb -mcallee-super-interworking -mtune=arm7tdmi-s" valueType="string"/>
 <inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.cygwin.1649924228" superClass="cdt.managedbuild.tool.gnu.c.compiler.input.cygwin"/>
@@ -638,7 +640,7 @@
 </extensions>
 </storageModule>
 <storageModule moduleId="cdtBuildSystem" version="4.0.0">
-<configuration artifactExtension="elf" artifactName="image" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.release,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.cygwin.exe.release.1862423701.1903133016" name="flasher_2_1" parent="cdt.managedbuild.config.gnu.cygwin.exe.release" postannouncebuildStep="Generate the image files for the various tools" postbuildStep="python ../tools/buildimages/buildimages.py -o image image.elf" preannouncebuildStep="Build the register files" prebuildStep="cd ../docs/registers; make">
+<configuration artifactExtension="elf" artifactName="image" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.release,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.cygwin.exe.release.1862423701.1903133016" name="flasher_2_1" parent="cdt.managedbuild.config.gnu.cygwin.exe.release" postannouncebuildStep="Generate the image files for the various tools" postbuildStep="python ../tools/buildimages/buildimages.py -o image image.elf" preannouncebuildStep="Build the register files" prebuildStep="cd ../docs/registers; make all">
 <folderInfo id="cdt.managedbuild.config.gnu.cygwin.exe.release.1862423701.1903133016." name="/" resourcePath="">
 <toolChain id="cdt.managedbuild.toolchain.gnu.cygwin.exe.release.932233756" name="Cygwin GCC" superClass="cdt.managedbuild.toolchain.gnu.cygwin.exe.release">
 <targetPlatform binaryParser="org.eclipse.cdt.core.GNU_ELF" id="cdt.managedbuild.target.gnu.platform.cygwin.exe.release.79588000" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.cygwin.exe.release"/>
@@ -657,8 +659,10 @@
 <option id="gnu.c.compiler.cygwin.exe.release.option.debugging.level.2122873662" name="Debug Level" superClass="gnu.c.compiler.cygwin.exe.release.option.debugging.level" value="gnu.c.debugging.level.max" valueType="enumerated"/>
 <option id="gnu.c.compiler.option.preprocessor.nostdinc.716936952" name="Do not search system directories (-nostdinc)" superClass="gnu.c.compiler.option.preprocessor.nostdinc" value="false" valueType="boolean"/>
 <option id="gnu.c.compiler.option.include.paths.1393559783" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
-<listOptionValue builtIn="false" value="&quot;../src/interface/ROM_2_0&quot;"/>
-<listOptionValue builtIn="false" value="../src/common"/>
+<listOptionValue builtIn="false" value="&quot;../src/interface/ROM_2_1&quot;"/>
+<listOptionValue builtIn="false" value="&quot;../src/common&quot;"/>
+<listOptionValue builtIn="false" value="&quot;../src/build/registers&quot;"/>
+<listOptionValue builtIn="false" value="&quot;../src/compiler/gnuarm&quot;"/>
 </option>
 <option id="gnu.c.compiler.option.misc.other.882267519" name="Other flags" superClass="gnu.c.compiler.option.misc.other" value="-c -fmessage-length=0 -fno-strict-aliasing  -fno-common -ffixed-r8 -msoft-float -mcpu=arm7tdmi-s -mthumb-interwork -march=armv4t -mthumb -mcallee-super-interworking -mtune=arm7tdmi-s" valueType="string"/>
 <inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.cygwin.1487316877" superClass="cdt.managedbuild.tool.gnu.c.compiler.input.cygwin"/>

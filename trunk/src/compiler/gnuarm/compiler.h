@@ -23,6 +23,9 @@
 #error "File only included with ARM GCC"
 #endif
 
+/// define the assertion check
+#define ASSERT(__c)
+
 /// define the force inlining attribute for this compiler
 #define __INLINE static __attribute__((__always_inline__)) inline
 
