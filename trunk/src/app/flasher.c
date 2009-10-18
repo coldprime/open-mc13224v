@@ -29,10 +29,10 @@ static void
 uart1_putc(char c)
 {
     // wait for the TX FIFO to be non empty
-    while (UART1_REGS_P->Utxcon == 0) ;
+    while (uart1_utxcon_get() == 0) ;
 
     // add a char to the TX FIFO
-    UART1_REGS_P->Udata = (unsigned long)c;
+    uart1_udata_set(c);
 }
 
 static void
