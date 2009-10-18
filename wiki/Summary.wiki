@@ -1,4 +1,5 @@
 #summary Summary of the open-mc13224v project
+#labels Featured
 = Introduction =
 
 The goal of the `open-mc13224v` project is to provide an easy way to start development of applications for the Freescale MC13224V chip.
