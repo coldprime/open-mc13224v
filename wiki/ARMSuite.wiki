@@ -1,4 +1,3 @@
-#labels Featured
 #Instructions to build the compilation, linking and debugging suite for ARM
 
 The required archive files are:
