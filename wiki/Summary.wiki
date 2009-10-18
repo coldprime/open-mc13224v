@@ -1,11 +1,18 @@
 #summary Summary of the open-mc13224v project
 = Introduction =
 
-The goal of the open-mc13224v project is too provide an easy way to start development of applications for the Freescale MC13224V chip.
+The goal of the `open-mc13224v` project is too provide an easy way to start development of applications for the Freescale MC13224V chip.
+
+It provides:
+ * a set of source files to build basic applications for the chip
+ * the rules to build the applications
+ * a set of tools that are necessary to interface the chip from a host computer
+ * the libraries of the ROM
 
 
 = Details =
 
-The requirements to be able to use this project are:
+The requirements for this project are:
  * Eclipse 3.2+ installed
  * Python 2.4+
+ * gcc for ARM
