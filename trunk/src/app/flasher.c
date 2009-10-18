@@ -17,10 +17,11 @@
  *    along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "Platform.h"
-#include "UartLowLevel.h"
+//#include "Platform.h"
+//#include "UartLowLevel.h"
 #include "Flash.h"
 
+#include "reg_gpio.h"
 #include "reg_uart1.h"
 
 const char nibble[16]={'0','1','2','3','4','5','6','7', '8','9','a','b','c','d','e','f'};
@@ -70,13 +71,13 @@ static void
 InitGpios(void)
 {
     // configure the GPIOs 25-23 as output (KBI3-KBI1), connect to LED control
-    GPIO_REGS_P->DirLo = (7 << 23);
+    gpio_pad_dir0_set(7 << 23);
 
     // configure the GPIO15-14 to UART1 (UART1 TX and RX)
-    GPIO_REGS_P->FuncSel0 = ((0x01 << (14*2)) | (0x01 << (15*2)));
+    gpio_func_sel0_set((0x01 << (14*2)) | (0x01 << (15*2)));
 
     // clear the LEDs
-    GPIO_REGS_P->DataLo = 0;
+    gpio_data0_set(0);
 }
 
 static void
@@ -84,13 +85,13 @@ InitUart1(void)
 {
     // reinitialize the UART1: mask interrupts, 8x oversampling (BE CAREFUL, this is an
     // error in the reference manual)
-    UART1_REGS_P->Ucon = 0x00006400;
+    uart1_ucon_set(MRXR_BIT|MTXR_BIT|XTIM_BIT);
 
     // UART1 baudrate: INC = 767, MOD = 9999, 8x oversampling -> 230400 baud @ 24 MHz
-    UART1_REGS_P->Ubr = 767<<16 | 9999;
+    uart1_ubr_pack(767, 9999);
 
     // enable the UART TX and RX
-    UART1_REGS_P->Ucon = 0x00006403;
+    uart1_ucon_set(MRXR_BIT|MTXR_BIT|XTIM_BIT|RXE_BIT|TXE_BIT);
 }
 
 void Main(void)
@@ -104,6 +105,6 @@ void Main(void)
     // start the NVM regulators
 
     while (1)
-        uart1_puts("Ca y est");
+        uart1_puts("Ca y est, sans le FS!");
 
 }

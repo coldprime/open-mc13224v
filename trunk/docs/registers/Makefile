@@ -3,7 +3,7 @@ REG = python ../../tools/reg_xls2h/reg_xls2h.py
 
 ../../src/build/registers/reg_gpio.h: GPIO.xls Makefile 
 	mkdir -p $(dir $@)
-	$(REG) --short $< "GPIO_" 0x80000000 $@
+	$(REG) --short $< "" 0x80000000 $@
 
 ../../src/build/registers/reg_spi.h: SPI.xls Makefile 
 	mkdir -p $(dir $@)
