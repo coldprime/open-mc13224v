@@ -17,12 +17,12 @@
  *    along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-//#include "Platform.h"
-//#include "UartLowLevel.h"
 #include "Flash.h"
+#include "NVM.h"
 
 #include "reg_gpio.h"
 #include "reg_uart1.h"
+#include "reg_crm.h"
 
 const char nibble[16]={'0','1','2','3','4','5','6','7', '8','9','a','b','c','d','e','f'};
 
@@ -66,10 +66,21 @@ uart1_put_u32(uint32_t v)
     uart1_put_u16(v >> 16);
     uart1_put_u16(v & 0xFFFF);
 }
-
+/**
+ * Set the basic configuration for the whole platform.  This cand depend on the
+ * application.
+ */
 static void
-InitGpios(void)
+InitPlatform(void)
 {
+    // set:
+    //   - the clock frequency for the whole platform to 24MHz (divider = 0)
+    //   - JTAG security enforced off
+    //   - SPIF uses 1.8
+    //   - power source is VBATT
+    crm_sys_cntl_pack(0, 0, 1, 1, 0, 0);
+
+    // GPIOS
     // configure the GPIOs 25-23 as output (KBI3-KBI1), connect to LED control
     gpio_pad_dir0_set(7 << 23);
 
@@ -96,15 +107,29 @@ InitUart1(void)
 
 void Main(void)
 {
-    // initialize the GPIOs for the application
-    InitGpios();
+    nvmType_t type=0;
+    nvmErr_t err;
+
+    // initialize the whole platform
+    InitPlatform();
 
     // initialize the UART1
     InitUart1();
 
     // start the NVM regulators
+    FlashStartReg();
 
-    while (1)
-        uart1_puts("Ca y est, sans le FS!");
+    err = NVM_Detect(gNvmInternalInterface_c, &type);
+
+    uart1_puts("NVM detect returned: 0x");
+    uart1_put_u8(err);
+    uart1_puts(", type: 0x");
+    uart1_put_u8(type);
+    uart1_puts("\n");
+
+    uart1_puts("Ca y est, sans le FS!");
+
+    while (1) ;
+
 
 }
