@@ -225,6 +225,8 @@ boot_dabort:
 # reserved vector
 boot_reserved:
     B boot_reserved
+
+    # this is here just for debug to return from an exception
     SUBS PC, LR, #4
 
 

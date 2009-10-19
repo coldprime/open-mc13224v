@@ -42,8 +42,6 @@ FlashStartReg(void)
 void
 FlashStopReg(void)
 {
-    volatile uint32_t counter;
-
     // turn NVM regulator OFF
     vreg_1p8v_en_setf(0);
 }

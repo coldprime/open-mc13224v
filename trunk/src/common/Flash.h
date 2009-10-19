@@ -21,11 +21,19 @@
 #define _FLASH_H_
 
 /**
- * Start the internal flash regulators.
+ * Start the internal flash required voltage regulators.
+ *
+ * This function must be called prior to any other flash access function.
  */
 extern void
 FlashStartReg(void);
 
+/**
+ * Stop the internal flash required voltage regulators.
+ *
+ * Once this function has been called, no other function accessing the internal flash will
+ * work correctly.
+ */
 extern void
 FlashStopReg(void);
 

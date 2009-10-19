@@ -37,6 +37,7 @@
 <listOptionValue builtIn="false" value="&quot;../src/interface/ROM_2_0&quot;"/>
 <listOptionValue builtIn="false" value="&quot;../src/common&quot;"/>
 <listOptionValue builtIn="false" value="&quot;../src/build/registers&quot;"/>
+<listOptionValue builtIn="false" value="&quot;../src/compiler/gnuarm&quot;"/>
 </option>
 <option id="gnu.c.compiler.option.misc.other.1698584199" name="Other flags" superClass="gnu.c.compiler.option.misc.other" value="-c -fmessage-length=0 -fno-strict-aliasing  -fno-common -ffixed-r8 -msoft-float -mcpu=arm7tdmi-s -mthumb-interwork -march=armv4t -mthumb -mcallee-super-interworking -mtune=arm7tdmi-s" valueType="string"/>
 <inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.cygwin.217619237" superClass="cdt.managedbuild.tool.gnu.c.compiler.input.cygwin"/>
@@ -350,6 +351,7 @@
 <listOptionValue builtIn="false" value="&quot;../src/interface/ROM_2_1&quot;"/>
 <listOptionValue builtIn="false" value="&quot;../src/common&quot;"/>
 <listOptionValue builtIn="false" value="&quot;../src/build/registers&quot;"/>
+<listOptionValue builtIn="false" value="&quot;../src/compiler/gnuarm&quot;"/>
 </option>
 <option id="gnu.c.compiler.option.misc.other.1886029754" name="Other flags" superClass="gnu.c.compiler.option.misc.other" value="-c -fmessage-length=0 -fno-strict-aliasing  -fno-common -ffixed-r8 -msoft-float -mcpu=arm7tdmi-s -mthumb-interwork -march=armv4t -mthumb -mcallee-super-interworking -mtune=arm7tdmi-s" valueType="string"/>
 <inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.cygwin.1649924228" superClass="cdt.managedbuild.tool.gnu.c.compiler.input.cygwin"/>

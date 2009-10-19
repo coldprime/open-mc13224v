@@ -18,54 +18,12 @@
  */
 
 #include "Flash.h"
+#include "Uart1.h"
 #include "NVM.h"
 
 #include "reg_gpio.h"
-#include "reg_uart1.h"
 #include "reg_crm.h"
 
-const char nibble[16]={'0','1','2','3','4','5','6','7', '8','9','a','b','c','d','e','f'};
-
-static void
-uart1_putc(char c)
-{
-    // wait for the TX FIFO to be non empty
-    while (uart1_utxcon_get() == 0) ;
-
-    // add a char to the TX FIFO
-    uart1_udata_set(c);
-}
-
-static void
-uart1_puts(char const *s)
-{
-    while (*s != 0)
-    {
-        uart1_putc(*s);
-        s++;
-    }
-}
-
-static void
-uart1_put_u8(uint8_t v)
-{
-    uart1_putc(nibble[v >> 4]);
-    uart1_putc(nibble[v & 0xF]);
-}
-
-static void
-uart1_put_u16(uint16_t v)
-{
-    uart1_put_u8(v >> 8);
-    uart1_put_u8(v & 0xFF);
-}
-
-static void
-uart1_put_u32(uint32_t v)
-{
-    uart1_put_u16(v >> 16);
-    uart1_put_u16(v & 0xFFFF);
-}
 /**
  * Set the basic configuration for the whole platform.  This cand depend on the
  * application.
@@ -91,20 +49,6 @@ InitPlatform(void)
     gpio_data0_set(0);
 }
 
-static void
-InitUart1(void)
-{
-    // reinitialize the UART1: mask interrupts, 8x oversampling (BE CAREFUL, this is an
-    // error in the reference manual)
-    uart1_ucon_set(MRXR_BIT|MTXR_BIT|XTIM_BIT);
-
-    // UART1 baudrate: INC = 767, MOD = 9999, 8x oversampling -> 230400 baud @ 24 MHz
-    uart1_ubr_pack(767, 9999);
-
-    // enable the UART TX and RX
-    uart1_ucon_set(MRXR_BIT|MTXR_BIT|XTIM_BIT|RXE_BIT|TXE_BIT);
-}
-
 void Main(void)
 {
     nvmType_t type=0;
@@ -114,20 +58,28 @@ void Main(void)
     InitPlatform();
 
     // initialize the UART1
-    InitUart1();
+    Uart1Init();
 
     // start the NVM regulators
     FlashStartReg();
 
+    // detect the NVM type
     err = NVM_Detect(gNvmInternalInterface_c, &type);
+    Uart1PutS("NVM detect returned: 0x");
+    Uart1PutU8(err);
+    Uart1PutS(", type: 0x");
+    Uart1PutU8(type);
+    Uart1PutS("\n");
 
-    uart1_puts("NVM detect returned: 0x");
-    uart1_put_u8(err);
-    uart1_puts(", type: 0x");
-    uart1_put_u8(type);
-    uart1_puts("\n");
+    // erase the flash portion that is not reserved
+    err = NVM_Erase(gNvmInternalInterface_c, type, 0x7FFFFFFF);
+    Uart1PutS("NVM erase returned: 0x");
+    Uart1PutU8(err);
+    Uart1PutS("\n");
 
-    uart1_puts("Ca y est, sans le FS!");
+    Uart1PutS("ready\n");
+
+    Uart1PutS("Ca y est, sans le FS!");
 
     while (1) ;
 

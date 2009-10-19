@@ -6,9 +6,6 @@ OUTPUT_ARCH(arm)
 /* configure the entry point */
 ENTRY(vectors)
 
-/* force the Rom patch vectors to be included even if they are in an archive */
-EXTERN(RP_Vector_Thumb_0)
-
 MEMORY
 {
     /* the default Freescale internal SRAM */
@@ -26,32 +23,7 @@ SECTIONS
     EXEC_RAM_VECTORS 0x00400000 :
     {
         /* the address 0 must contain the boot vectors */
-        *Init-RAMROM.o(.vec)
-    } > sram
-    
-    EXEC_RAM_RPTV_0 0x00400020 :
-    {
-    /* LLC.a:rp_vector_IAR.o(rp_vector_thumb_0) */
-        *(rp_vector_thumb_0)
-    } > sram
-    
-    EXEC_RAM_RPTV_1 0x00400060 :
-    {
-        *(rp_vector_thumb_1)
-    } > sram
-    
-    EXEC_RAM_RPTV_2 0x004000A0 :
-    {
-        *(rp_vector_thumb_2)
-    } > sram
-    
-    EXEC_RAM_RPTV_3 0x004000E0 :
-    {
-        *(rp_vector_thumb_3)
-    } > sram
-    
-    EXEC_RAM_ROMVAR 0x00400120 :
-    {
+        *Init-RAMonly.o(.vec)
     } > sram
     
     EXEC_RAM_TEXT 0x00400800 :
