@@ -26,5 +26,7 @@
 extern void
 FlashStartReg(void);
 
+extern void
+FlashStopReg(void);
 
 #endif // _FLASH_H_

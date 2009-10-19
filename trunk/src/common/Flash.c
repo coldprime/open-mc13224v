@@ -19,20 +19,31 @@
 
 #include "Flash.h"
 
+#include "reg_crm.h"
+
 void
 FlashStartReg(void)
 {
-  volatile unsigned long counter;
+    // turn NVM regulator OFF
+    vreg_1p8v_en_setf(0);
 
-//  VregCntl &= (~BUCK_EN);
-//  VregCntl |= BUCK_BYPASS_EN;
+    // clear the BUCK_EN and enable the BUCK bypass
+    buck_en_setf(0);
+    buck_bypass_en_setf(1);
 
-  counter = 18200;
-  while(counter--);
+    // turn NVM regulator ON
+    vreg_1p8v_en_setf(1);
 
-//  VregCntl |= VREG_1P8V_EN;
-  counter = 5200;
-  while(counter--);
+    // wait until 1.8V is ready
+    while (vreg_1p8v_rdy_getf() == 0) ;
 }
 
 
+void
+FlashStopReg(void)
+{
+    volatile uint32_t counter;
+
+    // turn NVM regulator OFF
+    vreg_1p8v_en_setf(0);
+}
