@@ -224,7 +224,13 @@ extern nvmErr_t NVM_Verify(nvmInterface_t nvmInterface, nvmType_t nvmType ,void 
 ************************************************************************************/
 extern nvmErr_t NVM_BlankCheck(nvmInterface_t nvmInterface, nvmType_t nvmType , uint32_t address, uint32_t numBytes);
 
-
-
+/************************************************************************************
+* Prevent/Allow access to the last page of the NVM.  Setting 0 enables access.
+*
+* Interface assumptions:
+*   None
+*
+************************************************************************************/
+extern void NVM_SetSVar(uint32_t nvmAccess);
 
 #endif /* _NVM_DRIVER_H_ */
