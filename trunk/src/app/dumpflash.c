@@ -72,7 +72,11 @@ void Main(void)
     Uart1PutU8(type);
     Uart1PutS("\n");
 
-    for (addr = 0x1F000; addr < 0x20000; addr+=4)
+    // magical function call
+//    NVM_SetSVar(0);
+
+    // print the flash content
+    for (addr = 0x0000; addr < 0x400; addr+=4)
     {
         NVM_Read(gNvmInternalInterface_c, type, &data, addr, 4);
         Uart1PutU32(data);
@@ -80,6 +84,4 @@ void Main(void)
     }
 
     while (1) ;
-
-
 }

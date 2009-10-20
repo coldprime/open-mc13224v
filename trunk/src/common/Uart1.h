@@ -70,4 +70,12 @@ Uart1PutU16(uint16_t v);
 extern void
 Uart1PutU32(uint32_t v);
 
+/**
+ * Retrieve a char from the UART peripheral FIFO.
+ * @return First char received from the UART
+ */
+extern char
+Uart1GetC(void);
+
+
 #endif // _UART1_H_

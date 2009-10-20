@@ -24,18 +24,19 @@ import common.legalexception
 
 def usage():
     print """
-usage: loaduart.py [-h|--help] [-v] [-c numport] [-b baudrate] file1 file2 ...
+usage: loaduart.py [-h|--help] [-v] [-c numport] [-b baudrate] [-n] file1 file2 ...
        -h --help: print this help
        -v: verbose option
        -c numport: com port number (default is COM1)
        -b baudrate: baudrate (default is 115200)
+       -n: do not wait for the CONNECT keyword
        file1 file2 ... : list of files to load (first is expected to be from BOOTLOADER flow)
     """
 
 def main():
     # parse the command line
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hvc:b:", ["help", ])
+        opts, args = getopt.getopt(sys.argv[1:], "hvnc:b:", ["help", ])
     except getopt.GetoptError:
         # print help information and exit:
         usage()
@@ -45,12 +46,15 @@ def main():
     verbose = False
     comport = 0
     baudrate = 115200
+    connected = False
     for o, a in opts:
         if o in ["--help", "-h"]:
             usage()
             exit(0)
         if o == "-v":
             verbose = True
+        if o == "-n":
+            connected = True
         if o == "-c":
             try:
                 comport = int(a, 0)
@@ -64,11 +68,6 @@ def main():
             except:
                 raise common.legalexception.LegalException("Impossible to parse baudrate", 0)
             
-    if len(args) == 0:
-        usage()
-        raise common.legalexception.LegalException("No file to load", 0)
-
-        
     try:
         # create a serial port instance:
         #   -> COM, N, 8, 1, XX BPS, 1 second timeout, disable RTS/CTS
@@ -77,12 +76,12 @@ def main():
         raise common.legalexception.LegalException("Failed to open COM"+str(comport), 0)
     
 
-    # force the RTS line to detect the UART boot type in the ROM flow
-    ser.setRTS(True)
-    print("Please reset the board to detect COM port RTS line...")
+    if not connected:
+        # force the RTS line to detect the UART boot type in the ROM flow
+        ser.setRTS(True)
+        print("Please reset the board to detect COM port RTS line...")
 
     try:
-        connected = False
         while (not connected):
             # send the zero byte for autoconfiguration
             ser.write("\x00")
@@ -92,7 +91,7 @@ def main():
             if response == "CONNECT":
                 connected = True
 
-        # by default, load the next file without acknowledge
+        # by default, load the next file without acknowledgment
         indication = "x"
         # loop on all the files
         for f in args:
@@ -102,20 +101,31 @@ def main():
             fid.close()
             print("Processing file: %s(%d)"%(f, len(data)))
     
-            # write the entire content of the file to the UART
+            # write the length of the file to the UART
             ser.write(struct.pack("<L", len(data)))
             
             # if this is the first file, load quickly otherwise wait for confirmation
             if indication == "x":
                 ser.write(data)
             else:
-                for c in data:
-                    # write chars one by one
-                    ser.write(c)
+                counter = 0
+                while data != "":
+                    if len(data) > 32:
+                        sent = data[0:32]
+                        data = data[32:]
+                    else:
+                        sent = data
+                        data = ""
+                    # send a bunch of chars
+                    ser.write(sent)
                     # wait for the acknowledgment
-                    ack = ser.read(1)
-                    if c!= ack:
+                    ack = ser.read(len(sent))
+                    if sent != ack:
                         print("ERROR: Character sent and acknowledged differ")
+                        sys.exit(-1)
+                    # increment the number of chars sent
+                    counter+=len(sent)
+                    sys.stdout.write(". "*((counter+len(sent))/100 - (counter/100)))
 
             # loop as long as the user wants
             indication = "x"
@@ -130,6 +140,15 @@ def main():
 
                 # wait for an indication from user
                 indication = raw_input("press 'n' for next download -->")
+
+        while (True):
+            # read the maximum amount of characters
+            response = ser.read(10000)
+            # check if there was a timeout
+            if response == "":
+                print("Timeout")
+            else:
+                print(response)
 
     except KeyboardInterrupt:
         ser.close()

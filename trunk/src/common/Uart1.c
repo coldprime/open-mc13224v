@@ -89,3 +89,15 @@ Uart1PutU32(uint32_t v)
     Uart1PutU16(v >> 16);
     Uart1PutU16(v & 0xFFFF);
 }
+
+char
+Uart1GetC(void)
+{
+    uint32_t c;
+
+    // wait for at least one char to be received from the UART
+    while (uart1_urxcon_get() == 0) ;
+
+    // return the char
+    return (char)udata_getf();
+}

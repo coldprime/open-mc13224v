@@ -53,6 +53,8 @@ void Main(void)
 {
     nvmType_t type=0;
     nvmErr_t err;
+    uint32_t len, addr;
+    char c;
 
     // initialize the whole platform
     InitPlatform();
@@ -77,11 +79,39 @@ void Main(void)
     Uart1PutU8(err);
     Uart1PutS("\n");
 
-    Uart1PutS("ready\n");
+    // flush the reception queue
+    Uart1FlushRx();
 
-    Uart1PutS("Ca y est, sans le FS!");
+    // send ready command
+    Uart1PutS("ready...\n");
 
-    while (1) ;
+    // wait for the reception of the size of the package to copy into flash
+    len = Uart1GetC();
+    len += Uart1GetC() << 8;
+    len += Uart1GetC() << 16;
+    len += Uart1GetC() << 24;
 
+    // receive all the chars from the UART
+    addr = 0;
+    while (addr < len)
+    {
+        // receive a char from the UART
+        c = Uart1GetC();
+        // write the char to the FLASH
+        err = NVM_Write(gNvmInternalInterface_c, type, &c, addr, 1);
+        if (err)
+        {
+            break;
+        }
+        // send back the written char for acknowledgment
+        Uart1PutC(c);
+        // increment the address of the next char
+        addr++;
+    }
 
+    Uart1PutS("Programming done, len = 0x");
+    Uart1PutU32(len);
+
+    // wait forever
+    while (1);
 }
