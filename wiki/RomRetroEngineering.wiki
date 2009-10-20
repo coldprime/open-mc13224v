@@ -5,3 +5,4 @@ List of functions/processes that were retro engineered from the ROM content:
  * Boot code : RetroBootCode
  * `FlashLib_Read()` : RetroFlashLib_Read
  * `NVM_SetSVar()` : RetroNvmSetSvar
+ * `NVM_Detect()` : RetroNvmDetect
