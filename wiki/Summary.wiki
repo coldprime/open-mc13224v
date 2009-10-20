@@ -10,7 +10,7 @@ It provides:
  * a set of tools that are necessary to interface the chip from a host computer
  * the libraries of the ROM
 
-I started this project with the Freescale MC13224V kits from [http://www.redwirellc.com/store RedWireLLC]
+I started this project with the Freescale MC13224V kits from [http://www.redwirellc.com/store RedWireLLC] and all the targets in this project were tested successfully on this boards.
 
 = Details =
 
@@ -34,3 +34,8 @@ The structure of the project should help locate the files you are looking for:
   * simu/ : simulation scripts (describe the plateform, rom and flash content)
  * src/ : all the source files necessary for the various targets
  * tools/ : set of tools (can be required or not in the build process)
+
+= Documentation =
+Most documentation should be found in the wiki pages:
+ * RomRetroEngineering
+ * ArmSuite
