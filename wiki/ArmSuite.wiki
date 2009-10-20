@@ -1,0 +1,169 @@
+#Instructions to build the GNU compilation, linking and debugging suite for ARM
+
+The required archive files are:
+ * binutils-2.19.1.tar.gz
+ * gdb-6.8.50.20090912.tar.bz2 (the 6.8 stable release does not support the ARM-THUMB automatic disassembly)
+ * gmp-4.2.4.tar.bz2
+ * mpfr-2.4.1.tar.bz2
+ * gcc-core-4.4.0.tar.bz2
+ * newlib-1.17.0.tar.gz
+
+The goal is to compile all the necessary tools in `/opt/arm-elf-tools/gcc-X.X.X` .
+
+The script is the following:
+{{{
+#! /bin/sh
+
+# Variables
+export binutils_version=2.19.1
+export gdb_version=6.8.50.20090912
+export gmp_version=4.2.4
+export mpfr_version=2.4.1
+export gcc_version=4.4.0
+export newlib_version=1.17.0
+
+export srcdir=$(pwd)
+export target=arm-elf
+export prefix=/opt/arm-elf-tools/gcc-${gcc_version}
+ 
+export PATH="$prefix/bin":"$PATH"
+
+
+# Unpack
+
+tar xvf binutils-${binutils_version}.tar.gz
+if [ $? -ne 0 ] ; then \
+   exit -1; \
+fi
+tar xvf gdb-${gdb_version}.tar.gz
+if [ $? -ne 0 ] ; then \
+   exit -1; \
+fi
+tar xvf gmp-${gmp_version}.tar.bz2
+if [ $? -ne 0 ] ; then \
+   exit -1; \
+fi
+tar xvf mpfr-${mpfr_version}.tar.bz2
+if [ $? -ne 0 ] ; then \
+   exit -1; \
+fi
+tar xvf gcc-core-${gcc_version}.tar.bz2
+if [ $? -ne 0 ] ; then \
+   exit -1; \
+fi
+tar xvf newlib-${newlib_version}.tar.gz
+if [ $? -ne 0 ] ; then \
+   exit -1; \
+fi
+
+# here, eventually, replace the multilib support description file 
+#cp -f t-arm-elf gcc-${gcc_version}/gcc/config/arm
+
+languages
+# Build directory
+mkdir -p $prefix
+
+# binutils (no dependency)
+mkdir build-binutils
+cd build-binutils
+${srcdir}/binutils-${binutils_version}/configure \
+        --target=$target --prefix=$prefix \
+        --enable-interwork --enable-multilib --with-float=soft
+if [ $? -ne 0 ] ; then \
+   exit -1; \
+fi
+make all install
+if [ $? -ne 0 ] ; then \
+   exit -1; \
+fi
+
+# gdb (no dependency)
+cd $srcdir
+mkdir build-gdb
+cd build-gdb
+${srcdir}/gdb-${gdb_version}/configure \
+        --target=$target --prefix=$prefix \
+        --enable-interwork --enable-multilib --with-float=soft
+if [ $? -ne 0 ] ; then \
+   exit -1; \
+fi
+make all install
+if [ $? -ne 0 ] ; then \
+   exit -1; \
+fi
+
+# gmp (no dependency)
+cd $srcdir
+mkdir build-gmp
+cd build-gmp
+${srcdir}/gmp-${gmp_version}/configure --prefix=$srcdir/build-gmp
+if [ $? -ne 0 ] ; then \
+   exit -1; \
+fi
+make 
+if [ $? -ne 0 ] ; then \
+   exit -1; \
+fi
+make install
+if [ $? -ne 0 ] ; then \
+   exit -1; \
+fi
+
+# mpfr (gmp dependency)
+cd $srcdir
+mkdir build-mpfr
+cd build-mpfr
+${srcdir}/mpfr-${mpfr_version}/configure --prefix=$srcdir/build-mpfr --with-gmp=$srcdir/build-gmp
+if [ $? -ne 0 ] ; then \
+   exit -1; \
+fi
+make
+if [ $? -ne 0 ] ; then \
+   exit -1; \
+fi
+make install
+if [ $? -ne 0 ] ; then \
+   exit -1; \
+fi
+
+# gcc core (gmp and mpfr dependency)
+cd $srcdir
+mkdir build-gcc
+cd build-gcc
+${srcdir}/gcc-${gcc_version}/configure --target=$target --prefix=$prefix \
+        --with-gmp=${srcdir}/build-gmp --with-mpfr=${srcdir}/build-mpfr --disable-shared \
+        --enable-interwork --enable-multilib --with-float=soft \
+        --enable-languages="c" --with-newlib \
+        --with-headers=${srcdir}/newlib-${newlib_version}/newlib/libc/include
+if [ $? -ne 0 ] ; then \
+   exit -1; \
+fi
+make all-gcc install-gcc
+if [ $? -ne 0 ] ; then \
+   exit -1; \
+fi
+
+
+# newlib
+
+# newlib wants arm-elf-cc but there is only arm-elf-gcc, so we make a link
+#cd $prefix/bin
+#ln -s arm-elf-gcc arm-elf-cc
+
+cd $srcdir
+mkdir build-newlib
+cd build-newlib
+${srcdir}/newlib-${newlib_version}/configure --target=$target --prefix=$prefix \
+        --enable-multilib --enable-interwork --with-float=soft
+if [ $? -ne 0 ] ; then \
+   exit -1; \
+fi
+make all install
+if [ $? -ne 0 ] ; then \
+   exit -1; \
+fi
+
+# gcc rest
+cd $srcdir/build-gcc
+make all install
+}}}
