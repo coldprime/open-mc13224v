@@ -1,5 +1,5 @@
+#summary Portions of code that were retro engineered from the ROM
 #labels Phase-Implementation
-#Portions of code that were retro engineered from the ROM
 
 = Introduction =
 
