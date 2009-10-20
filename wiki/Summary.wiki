@@ -37,5 +37,5 @@ The structure of the project should help locate the files you are looking for:
 
 = Documentation =
 Most documentation should be found in the wiki pages:
- * RomRetroEngineering : head page for the ROM functions that were retro engineered
+ * RomRetroEngineering : main page for the ROM 2.1 functions that were retro engineered
  * ArmSuite : how to build the ARM free compilation and debugging suite from GNU
