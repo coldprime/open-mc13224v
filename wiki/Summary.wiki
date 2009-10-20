@@ -10,6 +10,7 @@ It provides:
  * a set of tools that are necessary to interface the chip from a host computer
  * the libraries of the ROM
 
+I started this project with the Freescale MC13224V kits from [http://www.redwirellc.com/store RedWireLLC]
 
 = Details =
 
@@ -17,3 +18,19 @@ The requirements for this project are:
  * Eclipse 3.2+ installed
  * Python 2.4+
  * gcc for ARM
+
+= Project Structure =
+The structure of the project should help locate the files you are looking for:
+
+ * data/ : data files that are not required by the build process
+  * flash/ : content of the last page of the flash of the chips that I own
+  * rom/ : chip rom content (in different versions if available)
+ * docs/ : documentation files
+  * registers/ : register description files
+   * Makefile : file that generates the header files from the XLS register files
+ * libraries/ : library files
+ * scripts/ : script files
+  * ld/ : link scripts
+  * simu/ : simulation scripts (describe the plateform, rom and flash content)
+ * src/ : all the source files necessary for the various targets
+ * tools/ : set of tools (can be required or not in the build process)
