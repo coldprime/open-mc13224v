@@ -84,36 +84,55 @@ nvmErr_t NVM_Detect(nvmInterface_t nvmInterface, nvmType_t* pNvmType)
 0x00006d18:      bf 28  cmp     r0, #191        ; 0xbf
 0x00006d1a:      01 d1  bne.n   0x6d20
         *pNvmType = 1;
+0x00006d1c:      2f 70  strb    r7, [r5, #0]
         return 0;
     }
-0x00006d1c:      2f 70  strb    r7, [r5, #0]
 0x00006d1e:      1b e0  b.n     0x6d58
-
+    // execute command
+    NVM_Command(baseAddr, 0x9f000000, 0x00000f88);    
 0x00006d20:      10 4f  ldr     r7, [pc, #64]   ; (0x6d64)
 0x00006d22:      3a 00  lsls    r2, r7, #0
 0x00006d24:      9f 21  movs    r1, #159        ; 0x9f
 0x00006d26:      09 06  lsls    r1, r1, #24
 0x00006d28:      00 98  ldr     r0, [sp, #0]
 0x00006d2a:      00 f0 b9 f9    bl      0x70a0
+    reg = REG(baseAddr+4) & 0xFF
 0x00006d2e:      00 98  ldr     r0, [sp, #0]
 0x00006d30:      40 68  ldr     r0, [r0, #4]
 0x00006d32:      30 40  ands    r0, r6
+    if (reg == 32)
+    {
 0x00006d34:      20 28  cmp     r0, #32
 0x00006d36:      02 d1  bne.n   0x6d3e
+        *pNvmType = 2;
 0x00006d38:      02 20  movs    r0, #2
 0x00006d3a:      28 70  strb    r0, [r5, #0]
+        return 0;
+    }
 0x00006d3c:      0c e0  b.n     0x6d58
+    // execute command
+    NVM_Command(baseAddr, 0x1D000000, 0x00000F88);    
 0x00006d3e:      3a 00  lsls    r2, r7, #0
 0x00006d40:      e8 21  movs    r1, #232        ; 0xe8
 0x00006d42:      49 05  lsls    r1, r1, #21
 0x00006d44:      00 98  ldr     r0, [sp, #0]
 0x00006d46:      00 f0 ab f9    bl      0x70a0
+    reg = REG(baseAddr+4) & 0xFF
 0x00006d4a:      00 98  ldr     r0, [sp, #0]
 0x00006d4c:      40 68  ldr     r0, [r0, #4]
 0x00006d4e:      06 40  ands    r6, r0
+    if (reg != 31)
+    {
+        *pNvmType = 0;
+    }
+    else
+    {
+        *pNvmType = 3;
+    }
 0x00006d50:      1f 2e  cmp     r6, #31
 0x00006d52:      00 d0  beq.n   0x6d56
 0x00006d54:      00 24  movs    r4, #0
+    return 0;
 0x00006d56:      2c 70  strb    r4, [r5, #0]
 0x00006d58:      00 20  movs    r0, #0
 0x00006d5a:      f8 bc  pop     {r3, r4, r5, r6, r7}
