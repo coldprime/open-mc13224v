@@ -25,7 +25,7 @@
 #include "reg_crm.h"
 
 /**
- * Set the basic configuration for the whole platform.  This cand depend on the
+ * Set the basic configuration for the whole platform.  This can vary with the
  * application.
  */
 static void
