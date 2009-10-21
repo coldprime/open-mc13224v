@@ -1,5 +1,5 @@
+#summary Portions of code that were retro engineered from the ROM
 #labels Phase-Implementation
- #summary Portions of code that were retro engineered from the ROM
 
 List of functions/processes that were retro engineered from the ROM content:
  * Boot code : RetroBootCode
