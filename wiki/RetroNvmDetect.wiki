@@ -66,8 +66,8 @@ nvmErr_t NVM_Detect(nvmInterface_t nvmInterface, nvmType_t* pNvmType)
 0x00006cfe:      01 27  movs    r7, #1
 0x00006d00:      00 98  ldr     r0, [sp, #0]
 0x00006d02:      c7 60  str     r7, [r0, #12]
-    // call function
-    70a0(baseAddr, 0x90000000, 0x000027a0)
+    // execute command
+    NVM_Command(baseAddr, 0x90000000, 0x000027a0);
 0x00006d04:      16 4a  ldr     r2, [pc, #88]   ; (0x6d60)
 0x00006d06:      90 21  movs    r1, #144        ; 0x90
 0x00006d08:      09 06  lsls    r1, r1, #24
