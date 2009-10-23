@@ -112,13 +112,21 @@ def main():
         # check if this is a loadable segment
         if type == 1:
             if verbose:
-                print("    -> PC=0x%08X, Segment: PC=0x%08X, File Size=0x%X, MemSize=0x%X)"%(curraddr, vaddr, filesz, memsz))
+                print("    -> Last segment end=0x%08X, Segment: Start=0x%08X, File Size=0x%X, MemSize=0x%X)"
+                      %(curraddr, vaddr, filesz, memsz))
+            # sanity check
             assert(vaddr >= curraddr)
             assert(memsz >= filesz)
+            
+            # generate the binary code from the segment:
+            #    + pad with 0's until segment start
             code += "\0"*(vaddr-curraddr)
+            #    + extract the binary from the ELF file content
             code += content[offset:offset+filesz]
+            #    + pad with 0's after the binary
             code += "\0"*(memsz-filesz)
-            curraddr += memsz
+            # update last segment end
+            curraddr = vaddr + memsz
         else:
             if verbose:
                 print("  -> not loadable program")
