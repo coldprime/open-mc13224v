@@ -1,4 +1,4 @@
-#summary Retro engineering the NVM_Detect().
+#summary Retro engineering NVM_Detect().
 
 {{{
 nvmErr_t NVM_Detect(nvmInterface_t nvmInterface, nvmType_t* pNvmType)
