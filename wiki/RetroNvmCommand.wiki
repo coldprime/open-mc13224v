@@ -1,4 +1,4 @@
-#summary Retro engineering the NVM_Command
+#summary Retro engineering NVM_Command().
 
 {{{
 void NVM_Command(uint32_t baseAddr, uint32_t data, uin32_t ctrl)
