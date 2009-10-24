@@ -1,4 +1,4 @@
-#summary Instructions to build the GNU compilation, linking and debugging suite for ARM
+#summary Instructions to build the GNU compilation, linking and debugging suite for ARM.
 
 The required archive files are:
  * binutils-2.19.1.tar.gz
