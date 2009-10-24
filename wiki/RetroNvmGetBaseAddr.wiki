@@ -1,4 +1,4 @@
-#summary Retro engineering the NVM_GetBaseAddr()
+#summary Retro engineering NVM_GetBaseAddr().
 
 {{{
 nvmErr_t NVM_GetBaseAddr(nvmInterface_t nvmInterface, uint32_t *pBaseAddr)
