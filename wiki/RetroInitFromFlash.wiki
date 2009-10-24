@@ -1,0 +1,65 @@
+#summary Retro engineering InitFromFlash()
+
+{{{
+InitFromFlash()
+{
+    uint32_t value;
+0x0000f97c:      f7 b5  push    {r0, r1, r2, r4, r5, r6, r7, lr}
+0x0000f97e:      8a b0  sub     sp, #40 ; 0x28
+    // read register CRM_STATUS_REG
+    reg = REG(0x80003018)
+0x0000f980:      46 48  ldr     r0, [pc, #280]  ; (0xfa9c)
+0x0000f982:      00 68  ldr     r0, [r0, #0]
+    if ((reg & VREG_1P8V_RDY) == 0)
+0x0000f984:      80 21  movs    r1, #128        ; 0x80
+0x0000f986:      c9 02  lsls    r1, r1, #11
+0x0000f988:      01 40  ands    r1, r0
+0x0000f98a:      8c 0c  lsrs    r4, r1, #18
+0x0000f98c:      01 d1  bne.n   0xf992
+    {
+        // probably start NVM regulators
+        call 0xf8f0
+0x0000f98e:      ff f7 af ff    bl      0xf8f0
+    }
+    call 6cb8(0, &value)
+0x0000f992:      69 46  mov     r1, sp
+0x0000f994:      00 20  movs    r0, #0
+0x0000f996:      f7 f7 8f f9    bl      0x6cb8
+0x0000f99a:      00 28  cmp     r0, #0
+0x0000f99c:      03 d1  bne.n   0xf9a6
+0x0000f99e:      68 46  mov     r0, sp
+0x0000f9a0:      00 78  ldrb    r0, [r0, #0]
+0x0000f9a2:      00 28  cmp     r0, #0
+0x0000f9a4:      01 d1  bne.n   0xf9aa
+0x0000f9a6:      00 20  movs    r0, #0
+0x0000f9a8:      72 e0  b.n     0xfa90
+0x0000f9aa:      00 20  movs    r0, #0
+0x0000f9ac:      f7 f7 6a fb    bl      0x7084
+0x0000f9b0:      82 b0  sub     sp, #8
+0x0000f9b2:      08 20  movs    r0, #8
+0x0000f9b4:      00 90  str     r0, [sp, #0]
+0x0000f9b6:      0c 9b  ldr     r3, [sp, #48]   ; 0x30
+0x0000f9b8:      07 aa  add     r2, sp, #28
+0x0000f9ba:      02 a8  add     r0, sp, #8
+0x0000f9bc:      01 78  ldrb    r1, [r0, #0]
+0x0000f9be:      00 20  movs    r0, #0
+0x0000f9c0:      f7 f7 d2 f9    bl      0x6d68
+0x0000f9c4:      02 b0  add     sp, #8
+0x0000f9c6:      00 28  cmp     r0, #0
+0x0000f9c8:      0c d1  bne.n   0xf9e4
+0x0000f9ca:      05 98  ldr     r0, [sp, #20]
+0x0000f9cc:      32 49  ldr     r1, [pc, #200]  ; (0xfa98)
+0x0000f9ce:      88 42  cmp     r0, r1
+0x0000f9d0:      08 d1  bne.n   0xf9e4
+0x0000f9d2:      05 a8  add     r0, sp, #20
+0x0000f9d4:      c1 88  ldrh    r1, [r0, #6]
+0x0000f9d6:      ff 22  movs    r2, #255        ; 0xff
+0x0000f9d8:      92 1c  adds    r2, r2, #2
+0x0000f9da:      91 42  cmp     r1, r2
+0x0000f9dc:      02 d2  bcs.n   0xf9e4
+0x0000f9de:      80 88  ldrh    r0, [r0, #4]
+0x0000f9e0:      81 07  lsls    r1, r0, #30
+
+0x0000fa9c:      18 30  adds    r0, #24
+0x0000fa9e:      00 80  strh    r0, [r0, #0]
+}}}
