@@ -1,4 +1,4 @@
-#summary Portions of code that were retro engineered from the ROM 2.1
+#summary Portions of code that were retro engineered from the ROM 2.1 .
 #labels Phase-Implementation
 
 Elements that were retro engineered from the ROM content:
