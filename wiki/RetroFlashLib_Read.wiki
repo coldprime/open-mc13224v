@@ -1,4 +1,4 @@
-#summary Retro engineering the FlashLib_Read function.
+#summary Retro engineering FlashLib_Read().
 
 {{{
 ; The following address is called with:
