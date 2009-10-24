@@ -1,4 +1,4 @@
-#summary Summary of the open-mc13224v project
+#summary Summary of the open-mc13224v project.
 #labels Featured
 = Introduction =
 
