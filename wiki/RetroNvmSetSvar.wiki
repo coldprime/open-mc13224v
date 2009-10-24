@@ -1,4 +1,4 @@
-#summary Retro engineering the NVM_SetSVar function.
+#summary Retro engineering NVM_SetSVar().
 {{{
 NVM_SetSVar(uint32_t v)
 {
