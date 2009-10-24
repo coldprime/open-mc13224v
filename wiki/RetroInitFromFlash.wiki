@@ -1,4 +1,4 @@
-#summary Retro engineering InitFromFlash()
+#summary Retro engineering InitFromFlash().
 
 {{{
 InitFromFlash()
