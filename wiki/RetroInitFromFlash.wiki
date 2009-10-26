@@ -1,11 +1,15 @@
 #summary Retro engineering InitFromFlash().
 
 {{{
+uint32_t
 InitFromFlash(uint32_t nvmAddr, uint32_t v1, uint8_t v2)
+// returns the number of read bytes from the NVM
 {
 0x0000f97c:      f7 b5  push    {r0, r1, r2, r4, r5, r6, r7, lr}
 0x0000f97e:      8a b0  sub     sp, #40 ; 0x28
     // stack variables
+    uint32_t NvmRegulatorsStarted ; // (r4)
+    uint32_t Offset ; // (r5)
     uint32_t NvmType ; // (sp+0)
     uint8_t Data[16] ; // (sp+4))
     uint8_t Buffer[8] ; // (sp+20)
@@ -16,8 +20,8 @@ InitFromFlash(uint32_t nvmAddr, uint32_t v1, uint8_t v2)
     reg = REG(0x80003018)
 0x0000f980:      46 48  ldr     r0, [pc, #280]  ; (0xfa9c)
 0x0000f982:      00 68  ldr     r0, [r0, #0]
-    r4 = reg & VREG_1P8V_RDY;
-    if (r4 == 0)
+    NvmRegulatorsStarted = reg & VREG_1P8V_RDY;
+    if (NvmRegulatorsStarted == 0)
 0x0000f984:      80 21  movs    r1, #128        ; 0x80
 0x0000f986:      c9 02  lsls    r1, r1, #11
 0x0000f988:      01 40  ands    r1, r0
@@ -97,7 +101,7 @@ InitFromFlash(uint32_t nvmAddr, uint32_t v1, uint8_t v2)
     }
     
     // initialize the offset
-    offset(r5) = 8;
+    Offset = 8;
 0x0000f9ec:      08 25  movs    r5, #8
 
     // save the length
@@ -113,11 +117,19 @@ InitFromFlash(uint32_t nvmAddr, uint32_t v1, uint8_t v2)
     goto loop1_mark1;
 0x0000f9f8:      06 e0  b.n     0xfa08
 
-
+loop_mark2:
+    r0 = f924(Data)
 0x0000f9fa:      01 a8  add     r0, sp, #4
 0x0000f9fc:      ff f7 92 ff    bl      0xf924
+    if (r0 == 0)
+    {
+        // re-lock the last page
+        NVM_SetSVar(1);
+        return Offset;
+    }
 0x0000fa00:      00 28  cmp     r0, #0
 0x0000fa02:      12 d0  beq.n   0xfa2a
+
 0x0000fa04:      80 00  lsls    r0, r0, #2
 0x0000fa06:      2d 18  adds    r5, r5, r0
 
@@ -139,48 +151,84 @@ loop1_mark1:
 0x0000fa1e:      00 20  movs    r0, #0
 0x0000fa20:      f7 f7 a2 f9    bl      0x6d68 (NVM_Read)
 0x0000fa24:      02 b0  add     sp, #8
-    // 
-    
+    // check if read happened correctly
+    if (r0 != 0)
 0x0000fa26:      00 28  cmp     r0, #0
 0x0000fa28:      03 d0  beq.n   0xfa32
+    {
+        // re-lock the last page
+        NVM_SetSVar(1);
 0x0000fa2a:      01 20  movs    r0, #1
 0x0000fa2c:      f7 f7 2a fb    bl      0x7084
+        return Offset ;
 0x0000fa30:      2d e0  b.n     0xfa8e
+    }
+    
+    r0 = uint32_t(Data[0]);
+    if (r0 < 16) 
+        goto loop_mark2
 0x0000fa32:      01 98  ldr     r0, [sp, #4]
 0x0000fa34:      10 28  cmp     r0, #16
 0x0000fa36:      e0 d3  bcc.n   0xf9fa
+
+    if (r0 >= 0x00140001)
+        goto loop_mark2
 0x0000fa38:      19 49  ldr     r1, [pc, #100]  ; (0xfaa0)
 0x0000fa3a:      88 42  cmp     r0, r1
 0x0000fa3c:      dd d2  bcs.n   0xf9fa
+
+    //
+    if ((v1 != 0) &&
 0x0000fa3e:      00 20  movs    r0, #0
 0x0000fa40:      0b 99  ldr     r1, [sp, #44]   ; 0x2c
 0x0000fa42:      00 29  cmp     r1, #0
 0x0000fa44:      19 d0  beq.n   0xfa7a
+        (v2 != 0))
 0x0000fa46:      0c a9  add     r1, sp, #48     ; 0x30
 0x0000fa48:      09 78  ldrb    r1, [r1, #0]
 0x0000fa4a:      00 29  cmp     r1, #0
 0x0000fa4c:      15 d0  beq.n   0xfa7a
+    {
+        r1 = 0
 0x0000fa4e:      00 21  movs    r1, #0
-0x0000fa50:      0b 9a  ldr     r2, [sp, #44]   ; 0x2c
+        if (*v1 == uint32_t(Data[0]))
+0x0000fa50:      0b 9a  ldr     r2, [sp, #44]   ; 0x2c 
+loop_mark3:
 0x0000fa52:      13 68  ldr     r3, [r2, #0]
 0x0000fa54:      01 9f  ldr     r7, [sp, #4]
 0x0000fa56:      bb 42  cmp     r3, r7
 0x0000fa58:      02 d1  bne.n   0xfa60
+        {
+            uint32_t(Data[0])) = *(v1+4);
 0x0000fa5a:      50 68  ldr     r0, [r2, #4]
 0x0000fa5c:      01 90  str     r0, [sp, #4]
+            r0 = 1
 0x0000fa5e:      01 20  movs    r0, #1
+        }
+        r1++;
 0x0000fa60:      49 1c  adds    r1, r1, #1
+        r2 += 8;
 0x0000fa62:      08 32  adds    r2, #8
+        if (r1 < v2_save)
 0x0000fa64:      08 9b  ldr     r3, [sp, #32]
 0x0000fa66:      99 42  cmp     r1, r3
 0x0000fa68:      01 d2  bcs.n   0xfa6e
+        {
+            if (r0 == 0) goto loop_mark3
 0x0000fa6a:      03 00  lsls    r3, r0, #0
 0x0000fa6c:      f1 d0  beq.n   0xfa52
+        }
+        if (r0 == 1)
 0x0000fa6e:      01 28  cmp     r0, #1
 0x0000fa70:      03 d1  bne.n   0xfa7a
+        {
+            call f924(Data)
 0x0000fa72:      01 a8  add     r0, sp, #4
 0x0000fa74:      ff f7 56 ff    bl      0xf924
 0x0000fa78:      c4 e7  b.n     0xfa04
+        }
+    }
+    r0 = 2;
 0x0000fa7a:      02 20  movs    r0, #2
 0x0000fa7c:      c2 e7  b.n     0xfa04
 
@@ -191,17 +239,15 @@ loop_exit:
     NVM_SetSVar(1);
 0x0000fa80:      01 20  movs    r0, #1
 0x0000fa82:      f7 f7 ff fa    bl      0x7084
-    if (r4 == 0)
+    if (NvmRegulatorsStarted == 0)
 0x0000fa86:      00 2c  cmp     r4, #0
 0x0000fa88:      01 d1  bne.n   0xfa8e
     {
         // probably STOP NVM regulators
 0x0000fa8a:      ff f7 43 ff    bl      0xf914
     }
-    // TBD: return value
+   return Offset;
 0x0000fa8e:      28 00  lsls    r0, r5, #0
-
-   return;
 0x0000fa90:      0d b0  add     sp, #52 ; 0x34
 0x0000fa92:      f0 bc  pop     {r4, r5, r6, r7}
 0x0000fa94:      02 bc  pop     {r1}
@@ -209,4 +255,5 @@ loop_exit:
 }
 0x0000fa98:      .word 0x00000abc
 0x0000fa9c:      .word 0x80003018
+0x0000faa0:      .word 0x00140001
 }}}
