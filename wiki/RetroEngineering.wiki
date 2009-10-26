@@ -8,8 +8,8 @@ Elements that were retro engineered from the ROM code:
   * `0x6cb8 = NVM_Detect()` : RetroNvmDetect
  * functions not published in the ROM interface reference manual but that have a published name in the library file LLC.a:
   * `0xe428 = FlashLib_Read()` : RetroFlashLib_Read
- * functions not published in the ROM interface reference manual but that have a published name in the library file MACPHY.a:
   * `0xf97c = InitFromFlash()` : RetroInitFromFlash
+ * functions not published in the ROM interface reference manual but that have a published name in the library file MACPHY.a:
   * `0x109b0 = InitializeMac()` : RetroInitializeMac
  * functions not published in the ROM interface reference manual and that have no library name (ROM address is provided and name is invented by me):
   * `0x70a0 = NVM_Command()` : RetroNvmCommand
