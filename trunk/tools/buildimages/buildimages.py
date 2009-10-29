@@ -6,6 +6,7 @@
 ########################################################################################
 
 import sys
+import os
 import getopt
 import struct
 import common.bytes
@@ -136,13 +137,14 @@ def main():
     fid = open(radix+"_flash.bin", 'wb')
     fid.write("OKOK"+struct.pack("L", len(code))+code)
     fid.close()
-    print("... generated '%s': %d bytes"%(fid.name, len(code)))
+
+    print("... generated '%s': %d bytes"%(fid.name, os.stat(fid.name).st_size))
 
     # generate the RAM file
     fid = open(radix+"_ram.bin", 'wb')
     fid.write(code)
     fid.close()
-    print("... generated '%s': %d bytes"%(fid.name, len(code)))
+    print("... generated '%s': %d bytes"%(fid.name, os.stat(fid.name).st_size))
 
 # main execution
 if __name__ == '__main__':
