@@ -125,7 +125,7 @@ InitFromFlash(uint32_t nvmAddr, struct FlashPatch *pPatch, uint8_t patchCount)
 
 loop1_mark2:
     // call function with data read
-    r0 = f924(Data)
+    r0 = IFF_Execute(Data);
 0x0000f9fa:      01 a8  add     r0, sp, #4
 0x0000f9fc:      ff f7 92 ff    bl      0xf924
     if (r0 == 0) 
@@ -236,7 +236,7 @@ loop1_error:
 0x0000fa6e:      01 28  cmp     r0, #1
 0x0000fa70:      03 d1  bne.n   0xfa7a
         {
-            call f924(Data)
+            IFF_Execute(Data);
 0x0000fa72:      01 a8  add     r0, sp, #4
 0x0000fa74:      ff f7 56 ff    bl      0xf924
             goto loop1_mark3;
