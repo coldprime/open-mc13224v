@@ -4954,15 +4954,27 @@ Disassembly of section P2:
   402e44:	3004 8000                                   .0..
 
 00402e48 <InitializePhy>:
+InitializePhy(uint8_t r0)
+{
+    // push stack
   402e48:	b5f1      	push	{r0, r4, r5, r6, r7, lr}
+    // retrieve a variable from the ROM variables (0x400000 - 0x400800)
+    r0 = *(0x004006a0);
   402e4a:	4c87      	ldr	r4, [pc, #540]	(403068 <PhyPlmeSetCurrentChannelRequest+0xb8>)
   402e4c:	6820      	ldr	r0, [r4, #0]
+    r1 = r0 + 35; 
   402e4e:	0001      	lsls	r1, r0, #0
   402e50:	3123      	adds	r1, #35
+    // address of a ROM variable
+    r5 = 0x00400690;
   402e52:	4d43      	ldr	r5, [pc, #268]	(402f60 <InitializePhy+0x118>)
+    // retrieve the content of the structure
+    if (uint8_t(*r1) == 0)
   402e54:	780a      	ldrb	r2, [r1, #0]
   402e56:	2a00      	cmp	r2, #0
   402e58:	d135      	bne.n	402ec6 <InitializePhy+0x7e>
+    {
+        r2 = *(r5);
   402e5a:	682a      	ldr	r2, [r5, #0]
   402e5c:	4e41      	ldr	r6, [pc, #260]	(402f64 <InitializePhy+0x11c>)
   402e5e:	6296      	str	r6, [r2, #40]
@@ -5016,6 +5028,7 @@ Disassembly of section P2:
   402ec0:	4930      	ldr	r1, [pc, #192]	(402f84 <InitializePhy+0x13c>)
   402ec2:	6809      	ldr	r1, [r1, #0]
   402ec4:	6048      	str	r0, [r1, #4]
+    }
   402ec6:	4e30      	ldr	r6, [pc, #192]	(402f88 <InitializePhy+0x140>)
   402ec8:	2700      	movs	r7, #0
   402eca:	7037      	strb	r7, [r6, #0]
