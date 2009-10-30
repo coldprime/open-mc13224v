@@ -93,8 +93,6 @@ Uart1PutU32(uint32_t v)
 char
 Uart1GetC(void)
 {
-    uint32_t c;
-
     // wait for at least one char to be received from the UART
     while (uart1_urxcon_get() == 0) ;
 
