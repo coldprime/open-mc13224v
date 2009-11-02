@@ -4962,13 +4962,13 @@ InitializePhy(uint8_t r0)
     r0 = *(0x004006a0);
   402e4a:	4c87      	ldr	r4, [pc, #540]	(403068 <PhyPlmeSetCurrentChannelRequest+0xb8>)
   402e4c:	6820      	ldr	r0, [r4, #0]
-    r1 = r0 + 35; 
+    r1 = r0 + 35;
   402e4e:	0001      	lsls	r1, r0, #0
   402e50:	3123      	adds	r1, #35
     // address of a ROM variable
     r5 = 0x00400690;
   402e52:	4d43      	ldr	r5, [pc, #268]	(402f60 <InitializePhy+0x118>)
-    // retrieve the content of the structure
+    // retrieve the content of the structure in
     if (uint8_t(*r1) == 0)
   402e54:	780a      	ldrb	r2, [r1, #0]
   402e56:	2a00      	cmp	r2, #0
@@ -4976,49 +4976,73 @@ InitializePhy(uint8_t r0)
     {
         r2 = *(r5);
   402e5a:	682a      	ldr	r2, [r5, #0]
+        *(r2+40) = 0x80009000;
   402e5c:	4e41      	ldr	r6, [pc, #260]	(402f64 <InitializePhy+0x11c>)
   402e5e:	6296      	str	r6, [r2, #40]
+        *(r2+44) = 80050300;
   402e60:	4b41      	ldr	r3, [pc, #260]	(402f68 <InitializePhy+0x120>)
   402e62:	62d3      	str	r3, [r2, #44]
+        *(r2+48) = 80009008;
   402e64:	4b41      	ldr	r3, [pc, #260]	(402f6c <InitializePhy+0x124>)
   402e66:	6313      	str	r3, [r2, #48]
+        *(r2+52) = uint8_t(*(r1+3));
   402e68:	78c9      	ldrb	r1, [r1, #3]
   402e6a:	6351      	str	r1, [r2, #52]
+        *(r2+56) = 0x8000900c;
   402e6c:	4940      	ldr	r1, [pc, #256]	(402f70 <InitializePhy+0x128>)
   402e6e:	6391      	str	r1, [r2, #56]
+        // read 4 unaligned bytes at r0+42
+        r0 = uint32_t(*(r0+42));
   402e70:	302a      	adds	r0, #42
   402e72:	f7fd fd4d 	bl	400910 <?Veneer (3) for __aeabi_uread4>
+        r1 = *(r5);
   402e76:	6829      	ldr	r1, [r5, #0]
+        r3 = r1 + 60;
   402e78:	000b      	lsls	r3, r1, #0
   402e7a:	333c      	adds	r3, #60
+        r2 = *r4;
   402e7c:	6822      	ldr	r2, [r4, #0]
+        *(r3) = r0 | (uint8_t(*(r2+39)) << 25);
   402e7e:	2727      	movs	r7, #39
   402e80:	5dd7      	ldrb	r7, [r2, r7]
   402e82:	067f      	lsls	r7, r7, #25
   402e84:	4338      	orrs	r0, r7
   402e86:	6018      	str	r0, [r3, #0]
+        *(r3+4) = 0x80009020;
   402e88:	483a      	ldr	r0, [pc, #232]	(402f74 <InitializePhy+0x12c>)
   402e8a:	6058      	str	r0, [r3, #4]
+        *(r3+8) = 12;
   402e8c:	200c      	movs	r0, #12
   402e8e:	6098      	str	r0, [r3, #8]
+        *(r3+12) = 0x80009004;
   402e90:	4839      	ldr	r0, [pc, #228]	(402f78 <InitializePhy+0x130>)
   402e92:	60d8      	str	r0, [r3, #12]
+        *(r3+16) = 0x101;
   402e94:	20ff      	movs	r0, #255
   402e96:	1c80      	adds	r0, r0, #2
   402e98:	6118      	str	r0, [r3, #16]
+        *(r3+20) = 0x80009000;
   402e9a:	615e      	str	r6, [r3, #20]
+        *(r3+24) = 0xc0050300;
   402e9c:	4873      	ldr	r0, [pc, #460]	(40306c <PhyPlmeSetCurrentChannelRequest+0xbc>)
   402e9e:	6198      	str	r0, [r3, #24]
+        *(r3+116) = 0x80009000;
   402ea0:	675e      	str	r6, [r3, #116]
+        *(r3+120) = 0x80050300;
   402ea2:	4f31      	ldr	r7, [pc, #196]	(402f68 <InitializePhy+0x120>)
   402ea4:	679f      	str	r7, [r3, #120]
+        r1 += 216;
   402ea6:	31d8      	adds	r1, #216
+        *(r1) = 0x80003048;
   402ea8:	4b34      	ldr	r3, [pc, #208]	(402f7c <InitializePhy+0x134>)
   402eaa:	600b      	str	r3, [r1, #0]
+        *(r1+4) = 0x00000f7c;
   402eac:	4b34      	ldr	r3, [pc, #208]	(402f80 <InitializePhy+0x138>)
   402eae:	604b      	str	r3, [r1, #4]
+        *(r1+8) = 0x80009000;
   402eb0:	608e      	str	r6, [r1, #8]
   402eb2:	60c8      	str	r0, [r1, #12]
+
   402eb4:	3228      	adds	r2, #40
   402eb6:	7810      	ldrb	r0, [r2, #0]
   402eb8:	7851      	ldrb	r1, [r2, #1]
@@ -6780,7 +6804,7 @@ InitializePhy(uint8_t r0)
 00403d00 <gRadioInit_ROM_Patched_c>:
   403d00:	4118 8000 0012 0018 9204 8000 0605 0000     .A..............
   403d10:	9208 8000 0504 0000 920c 8000 1111 0000     ................
-  403d20:	9210 8000 0000 0fc4 9300 8000 6000 2004     .............`. 
+  403d20:	9210 8000 0000 0fc4 9300 8000 6000 2004     .............`.
   403d30:	9304 8000 580c 4005 9308 8000 5801 4007     .....X.@.....X.@
   403d40:	930c 8000 d801 4005 9310 8000 d800 5a45     .......@......EZ
   403d50:	9314 8000 d800 4a45 9318 8000 4000 4004     ......EJ.....@.@
@@ -8050,7 +8074,7 @@ InitializePhy(uint8_t r0)
 
 004049c4 <?<Constant "\n\rMyStarNetworkDemo-C...">>:
   4049c4:	794d0d0a 72617453 7774654e 446b726f     ..MyStarNetworkD
-  4049d4:	2d6f6d65 726f6f43 616e6964 20726f74     emo-Coordinator 
+  4049d4:	2d6f6d65 726f6f43 616e6964 20726f74     emo-Coordinator
   4049e4:	6c707061 74616369 206e6f69 69207369     application is i
   4049f4:	6974696e 7a696c61 61206465 7220646e     nitialized and r
   404a04:	79646165 0a0d0a2e 0000000d              eady........
@@ -8089,7 +8113,7 @@ InitializePhy(uint8_t r0)
 00404b4c <?<Constant "Received the MLME-Sca...">>:
   404b4c:	65636552 64657669 65687420 4d4c4d20     Received the MLM
   404b5c:	63532d45 43206e61 69666e6f 6d206d72     E-Scan Confirm m
-  404b6c:	61737365 66206567 206d6f72 20656874     essage from the 
+  404b6c:	61737365 66206567 206d6f72 20656874     essage from the
   404b7c:	2e43414d 00000d0a                       MAC.....
 
 00404b84 <?<Constant "Sending the MLME-Asso...">>:
@@ -8175,7 +8199,7 @@ InitializePhy(uint8_t r0)
   404d48:	61686320 6c656e6e 00783020               channel 0x.
 
 00404d54 <?<Constant "Based on the ED scan ...">>:
-  404d54:	65736142 6e6f2064 65687420 20444520     Based on the ED 
+  404d54:	65736142 6e6f2064 65687420 20444520     Based on the ED
   404d64:	6e616373 65687420 676f6c20 6c616369     scan the logical
   404d74:	61686320 6c656e6e 00783020               channel 0x.
 
@@ -8194,7 +8218,7 @@ InitializePhy(uint8_t r0)
 
 00404dac <?<Constant "Initiating the Energy...">>:
   404dac:	74696e49 69746169 7420676e 45206568     Initiating the E
-  404dbc:	6772656e 65442079 74636574 206e6f69     nergy Detection 
+  404dbc:	6772656e 65442079 74636574 206e6f69     nergy Detection
   404dcc:	6e616353 000d0a2e                       Scan....
 
 00404dd4 <?<Constant "Started the coordinat...">>:
@@ -8230,8 +8254,8 @@ InitializePhy(uint8_t r0)
   404e94:	00000030                                0...
 
 00404e98 <?<Constant "\n\rReceived data frame...">>:
-  404e98:	65520d0a 76696563 64206465 20617461     ..Received data 
-  404ea8:	6d617266 79622065 76656420 20656369     frame by device 
+  404e98:	65520d0a 76696563 64206465 20617461     ..Received data
+  404ea8:	6d617266 79622065 76656420 20656369     frame by device
   404eb8:	00003030                                00..
 
 00404ebc <Region$$Table$$Base>:
@@ -8264,7 +8288,7 @@ InitializePhy(uint8_t r0)
   404f30:	00402fb1 00402e49 004029bd 004048f5     ./@.I.@..)@..H@.
 
 00404f40 <?<Constant "PAN Coordinator start...">>:
-  404f40:	204e4150 726f6f43 616e6964 20726f74     PAN Coordinator 
+  404f40:	204e4150 726f6f43 616e6964 20726f74     PAN Coordinator
   404f50:	72617473 2e646574 00000d0a              started.....
 
 00404f5c <?<Constant "\n\rDisconnected device...">>:
