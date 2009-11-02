@@ -6,13 +6,17 @@ REG = python ../../tools/reg_xls2h/reg_xls2h.py
 # build tool options
 CC_FLAGS= -O3 -g3 -Wall -fno-strict-aliasing  -fno-common -ffixed-r8 -msoft-float \
           -mcpu=arm7tdmi-s -mthumb-interwork -march=armv4t -mthumb \
-          -mcallee-super-interworking -mtune=arm7tdmi-s 
+          -mcallee-super-interworking -mtune=arm7tdmi-s
 LD_FLAGS= -nostdlib
 
 CC_INC= \
 	-I ../../src/compiler/gnuarm \
 	-I ../../src/build/registers \
 	-I ../../src/common
+
+# default target
+default: rtos install
+
 
 ../../src/build/registers/reg_crm.h: ../../docs/registers/CRM.xls
 	mkdir -p $(dir $@)
@@ -76,11 +80,13 @@ rtos: ../../rtos/rtos.elf
 	python ../../tools/buildimages/buildimages.py -o ../../rtos/image ../../rtos/rtos.elf
 	echo "... Finished building RTOS ..."
 
+LOADUART ?= -c 5
+
 install:
-	python ../../tools/loaduart/loaduart.py -c 5 -b 230400 ../../rtos/image_ram.bin
+	python ../../tools/loaduart/loaduart.py $(LOADUART) -b 230400 ../../rtos/image_ram.bin
 
 flash:
-	python ../../tools/loaduart/loaduart.py -c 5 -b 230400 ../../flasher_2_1/image_ram.bin ../../rtos/image_flash.bin
+	python ../../tools/loaduart/loaduart.py $(LOADUART) -b 230400 ../../flasher_2_1/image_ram.bin ../../rtos/image_flash.bin
 
 clean:
 	rm -rf ../../rtos
