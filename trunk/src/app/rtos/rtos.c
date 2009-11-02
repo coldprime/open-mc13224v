@@ -60,5 +60,18 @@ void Main(void)
     Uart1PutU32(0xCAFEBABE);
     Uart1PutS("\n");
 
+    {
+        volatile int i,j;
+        for (;;i++) {
+            if (i%64) {
+                Uart1PutS(".");
+                for (j = 0; j <0x10000;j++);
+            } else {
+                for (j = 0; j <0x800000;j++);
+            }
+        }
+    }
+
+
     while (1) ;
 }
