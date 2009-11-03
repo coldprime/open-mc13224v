@@ -12,7 +12,7 @@ LD_FLAGS= -nostdlib
 CC_INC= \
 	-I ../../src/compiler/gnuarm \
 	-I ../../src/build/registers \
-	-I ../../src/app/rtos \
+	-I ../../src/rtos \
 	-I ../../src/common
 
 # default target
@@ -49,11 +49,11 @@ default: rtos install
 
 # list of the objects needed to link RTOS
 rtos_objects= \
-	../../rtos/obj/boot/Init-RAMonly.o \
-	../../rtos/obj/common/Uart1.o \
-	../../rtos/obj/app/rtos/rtos_asm.o \
-	../../rtos/obj/app/rtos/rtos.o \
-	../../rtos/obj/app/rtos_test.o
+	../../build/rtos/obj/boot/Init-RAMonly.o \
+	../../build/rtos/obj/common/Uart1.o \
+	../../build/rtos/obj/rtos/rtos_asm.o \
+	../../build/rtos/obj/rtos/rtos.o \
+	../../build/rtos/obj/app/rtos_test.o
 
 # list of the generated register
 register_files= \
@@ -65,31 +65,31 @@ register_files= \
 	../../src/build/registers/reg_uart1.h \
 	../../src/build/registers/reg_uart2.h
 
-../../rtos/obj/%.o: ../../src/%.s $(register_files)
+../../build/rtos/obj/%.o: ../../src/%.s $(register_files)
 	mkdir -p $(@D)
 	$(CC) -c $(CC_FLAGS) -o $@ $(CC_INC) $<
 
-../../rtos/obj/%.o: ../../src/%.c $(register_files)
+../../build/rtos/obj/%.o: ../../src/%.c $(register_files)
 	mkdir -p $(@D)
 	$(CC) -c $(CC_FLAGS) -o $@ $(CC_INC) $<
 
 
-../../rtos/rtos.elf: $(rtos_objects)
+../../build/rtos/rtos.elf: $(rtos_objects)
 	$(LD) $(LD_FLAGS) -o $@ $(rtos_objects) -T ../../scripts/ld/RAMonly.lds
 
 .PHONY: rtos clean install
 .SILENT: rtos clean install
-rtos: ../../rtos/rtos.elf
-	python ../../tools/buildimages/buildimages.py -o ../../rtos/image ../../rtos/rtos.elf
+rtos: ../../build/rtos/rtos.elf
+	python ../../tools/buildimages/buildimages.py -o ../../build/rtos/image $<
 	echo "... Finished building RTOS ..."
 
 LOADUART ?= -c 5
 
 install:
-	python ../../tools/loaduart/loaduart.py $(LOADUART) -b 230400 ../../rtos/image_ram.bin
+	python ../../tools/loaduart/loaduart.py $(LOADUART) -b 230400 ../../build/rtos/image_ram.bin
 
 flash:
-	python ../../tools/loaduart/loaduart.py $(LOADUART) -b 230400 ../../flasher_2_1/image_ram.bin ../../rtos/image_flash.bin
+	python ../../tools/loaduart/loaduart.py $(LOADUART) -b 230400 ../../flasher_2_1/image_ram.bin ../../build/rtos/image_flash.bin
 
 clean:
-	rm -rf ../../rtos
+	rm -rf ../../build/rtos
