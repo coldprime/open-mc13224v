@@ -21,16 +21,41 @@
 
 struct rtos rtos_env;
 
+/// Schedule the next thread in the RTOS
+static void rtos_schedule(void)
+{
+    int cnt;
+
+rtos_schedule_restart:
+    for (cnt = 0; cnt < RTOS_TASK_NUM; cnt++)
+    {
+        if (rtos_env.threads[cnt].eventmask == 0)
+        {
+            // save the current thread index
+            rtos_env.current = cnt;
+
+            // switch between the current task and the new one to schedule
+            rtos_switch(&rtos_env.threads[cnt].sp, &rtos_env.sp);
+
+            goto rtos_schedule_restart;
+        }
+    }
+}
 
 void rtos_init(void)
 {
     // initialize the RTOS
+
+    // when the current thread is
+    rtos_env.current = -1;
 }
 
-void rtos_scheduler(void)
+void rtos_scheduler(uint32_t *stack)
 {
-    // switch to the first task
-    rtos_switch(&rtos_env.threads[0].sp, &rtos_env.sp);
+    do
+    {
+        rtos_schedule();
+    } while (1);
 }
 
 void rtos_yield(void)
@@ -45,4 +70,24 @@ void rtos_yield(void)
     rtos_switch(&rtos_env.threads[rtos_env.current].sp, &rtos_env.threads[old].sp);
 }
 
+void rtos_eventwait(uint32_t eventmask)
+{
+    // wait for any of the events in the event mask
+    rtos_env.threads[rtos_env.current].eventmask = eventmask;
 
+    // switch back to the scheduler
+    rtos_switch(&rtos_env.sp, &rtos_env.threads[rtos_env.current].sp);
+}
+
+void rtos_eventraise(uint32_t eventmask)
+{
+    int cnt;
+    for (cnt = 0; cnt < RTOS_TASK_NUM; cnt++)
+    {
+        if (rtos_env.threads[cnt].eventmask & eventmask)
+        {
+            // unlock the thread
+            rtos_env.threads[cnt].eventmask = 0;
+        }
+    }
+}

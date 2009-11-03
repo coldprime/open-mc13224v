@@ -32,10 +32,16 @@ void Thread1(void)
     Uart1PutS("Thread1 started\n");
     while (1)
     {
+        // raise event 2
+        rtos_eventraise(2);
+
+        // wait for event 1
+        rtos_eventwait(1);
+
         Uart1PutS("T1:");
         Uart1PutU32(cnt);
         Uart1PutS("\n");
-        rtos_yield();
+//        rtos_yield();
         cnt++;
     }
 }
@@ -47,10 +53,16 @@ void Thread2(void)
     Uart1PutS("Thread2 started\n");
     while (1)
     {
+        // raise event 1
+        rtos_eventraise(1);
+
+        // wait for event 2
+        rtos_eventwait(2);
+
         Uart1PutS("T2:");
         Uart1PutU32(cnt);
         Uart1PutS("\n");
-        rtos_yield();
+//        rtos_yield();
         cnt--;
     }
 }
@@ -87,7 +99,9 @@ InitPlatform(void)
 static void InitOs(void)
 {
     // create the tasks
+    rtos_env.threads[0].eventmask = 0;
     rtos_create(&rtos_env.threads[0].sp, Thread1, &rtos_env.threads[0].stack[RTOS_STACK_SIZE]);
+    rtos_env.threads[1].eventmask = 0;
     rtos_create(&rtos_env.threads[1].sp, Thread2, &rtos_env.threads[1].stack[RTOS_STACK_SIZE]);
 
 }
@@ -108,7 +122,7 @@ void Main(void)
     // initialize the Os
     InitOs();
 
-    // start the scheduler, should never return
-    rtos_scheduler();
+    // schedule the next thread, should never return
+    rtos_scheduler(0);
 }
 

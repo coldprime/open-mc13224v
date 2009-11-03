@@ -24,6 +24,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#define RTOS_TASK_NUM (2)
 #define RTOS_STACK_SIZE (128)
 
 /// Description of a thread from the scheduler point of view
@@ -32,22 +33,23 @@ struct thread
     /// Thread allocated stack
     uint32_t stack[RTOS_STACK_SIZE];
 
-    /// Stack pointer when saving
+    /// Thread stack pointer location for storage when thread goes inactive
     uint32_t sp;
 
-    /// Thread active state indication
-    bool active;
+    /// Mask of the events on which the thread is currently waiting
+    uint32_t eventmask;
 };
 
+/// RTOS main environment
 struct rtos
 {
     /// Thread array
     struct thread threads[2];
 
     /// Current thread
-    uint8_t current;
+    int32_t current;
 
-    /// Stack pointer when saving
+    /// Thread stack pointer location for storage when thread goes inactive
     uint32_t sp;
 };
 
@@ -66,7 +68,26 @@ extern void rtos_create(uint32_t *sp_save, void(*fn)(void), uint32_t *stack);
 /// Initialize the RTOS
 extern void rtos_init(void);
 
-/// Scheduler main entry point
-extern void rtos_scheduler(void);
+/**
+ * Launch the RTOS scheduler, this function never returns
+ *
+ * @param stack Pointer to the first word above the stack (full descending stack)
+ */
+extern void rtos_scheduler(uint32_t *stack);
+
+/**
+ * Raise events, this will awaken any thread pending on one of these events
+ *
+ * @param eventmask Mask of the events to raise
+ */
+void rtos_eventraise(uint32_t eventmask);
+
+/**
+ * Wait for any specified event
+ *
+ * @param eventmask Mask of the events to wait for
+ */
+void rtos_eventwait(uint32_t eventmask);
+
 
 #endif // _RTOS_H_

@@ -4,9 +4,8 @@ LD=arm-elf-ld
 REG = python ../../tools/reg_xls2h/reg_xls2h.py
 
 # build tool options
-CC_FLAGS= -O3 -g3 -Wall -fno-strict-aliasing  -fno-common -ffixed-r8 -msoft-float \
-          -mcpu=arm7tdmi-s -mthumb-interwork -march=armv4t -mthumb \
-          -mcallee-super-interworking -mtune=arm7tdmi-s
+CC_FLAGS= -O3 -g3 -Wall -fno-common -msoft-float \
+          -mcpu=arm7tdmi-s -march=armv4t -mtune=arm7tdmi-s
 LD_FLAGS= -nostdlib
 
 CC_INC= \
