@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plateform name = "mc13224v" debug = "0"/>
+<rom name = "../../data/rom/ROM_2_1.bin"/>
+<flash name = "../../rtos/image_flash.bin" preloaded="true"/>

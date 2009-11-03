@@ -60,7 +60,7 @@
 </toolChain>
 </folderInfo>
 <sourceEntries>
-<entry excluding="src/app/dumpflash.c|src/boot/Init-RAMonly.s|src/app/flasher.c|src/boot/Init-IAR.s" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name=""/>
+<entry excluding="thirdparty|src/app/dumpflash.c|src/boot/Init-RAMonly.s|src/app/flasher.c|src/boot/Init-IAR.s" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name=""/>
 </sourceEntries>
 </configuration>
 </storageModule>
@@ -373,7 +373,7 @@
 </toolChain>
 </folderInfo>
 <sourceEntries>
-<entry excluding="src/app/dumpflash.c|src/boot/Init-RAMonly.s|src/app/flasher.c|src/boot/Init-IAR.s|src/boot/Init-IAR.S" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+<entry excluding="thirdparty|src/app/dumpflash.c|src/boot/Init-RAMonly.s|src/app/flasher.c|src/boot/Init-IAR.s|src/boot/Init-IAR.S" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 </sourceEntries>
 </configuration>
 </storageModule>
@@ -686,7 +686,7 @@
 </toolChain>
 </folderInfo>
 <sourceEntries>
-<entry excluding="src/app/dumpflash.c|src/boot/Init-RAMonly.s|src/app/dummy_app.c|src/boot/Init-IAR.s|src/boot/Init-IAR.S" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+<entry excluding="thirdparty|src/app/dumpflash.c|src/boot/Init-RAMonly.s|src/app/dummy_app.c|src/boot/Init-IAR.s|src/boot/Init-IAR.S" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 </sourceEntries>
 </configuration>
 </storageModule>
@@ -999,7 +999,7 @@
 </toolChain>
 </folderInfo>
 <sourceEntries>
-<entry excluding="src/app/flasher.c|src/boot/Init-RAMonly.s|src/app/dummy_app.c|src/boot/Init-IAR.s|src/boot/Init-IAR.S" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+<entry excluding="thirdparty|src/app/flasher.c|src/boot/Init-RAMonly.s|src/app/dummy_app.c|src/boot/Init-IAR.s|src/boot/Init-IAR.S" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 </sourceEntries>
 </configuration>
 </storageModule>

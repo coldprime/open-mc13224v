@@ -50,6 +50,7 @@ default: rtos install
 rtos_objects= \
 	../../rtos/obj/boot/Init-RAMonly.o \
 	../../rtos/obj/common/Uart1.o \
+	../../rtos/obj/app/rtos/rtos_asm.o \
 	../../rtos/obj/app/rtos/rtos.o
 
 # list of the generated register

@@ -17,10 +17,45 @@
  *    along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "rtos.h"
+
 #include "Uart1.h"
 
 #include "reg_gpio.h"
 #include "reg_crm.h"
+
+struct rtos rtos_env;
+
+
+void Thread1(void)
+{
+    uint32_t cnt = 0;
+
+    Uart1PutS("Thread1 started\n");
+    while (1)
+    {
+        Uart1PutS("T1:");
+        Uart1PutU32(cnt);
+        Uart1PutS("\n");
+        rtos_yield();
+        cnt++;
+    }
+}
+
+void Thread2(void)
+{
+    uint32_t cnt = 0xFFFFFFFF;
+
+    Uart1PutS("Thread2 started\n");
+    while (1)
+    {
+        Uart1PutS("T2:");
+        Uart1PutU32(cnt);
+        Uart1PutS("\n");
+        rtos_yield();
+        cnt--;
+    }
+}
 
 /**
  * Set the basic configuration for the whole platform.  This can vary with the
@@ -47,6 +82,33 @@ InitPlatform(void)
     gpio_data0_set(0);
 }
 
+void rtos_init(void)
+{
+    // create the tasks
+    rtos_create(&rtos_env.threads[0].sp, Thread1, &rtos_env.threads[0].stack[RTOS_STACK_SIZE]);
+    rtos_create(&rtos_env.threads[1].sp, Thread2, &rtos_env.threads[1].stack[RTOS_STACK_SIZE]);
+
+}
+
+void rtos_scheduler(void)
+{
+    // switch to the first task
+    rtos_switch(&rtos_env.threads[0].sp, &rtos_env.sp);
+}
+
+void rtos_yield(void)
+{
+    uint8_t old;
+
+    // this is a fake switch selection : move to the next thread
+    old = rtos_env.current;
+    rtos_env.current = (rtos_env.current + 1)%2;
+
+    // this function should be called from the current running task
+    rtos_switch(&rtos_env.threads[rtos_env.current].sp, &rtos_env.threads[old].sp);
+}
+
+
 void Main(void)
 {
     // initialize the whole platform
@@ -60,18 +122,9 @@ void Main(void)
     Uart1PutU32(0xCAFEBABE);
     Uart1PutS("\n");
 
-    {
-        volatile int i,j;
-        for (;;i++) {
-            if (i%64) {
-                Uart1PutS(".");
-                for (j = 0; j <0x10000;j++);
-            } else {
-                for (j = 0; j <0x800000;j++);
-            }
-        }
-    }
+    // initialize the RTOS
+    rtos_init();
 
-
-    while (1) ;
+    // start the scheduler, should never return
+    rtos_scheduler();
 }
