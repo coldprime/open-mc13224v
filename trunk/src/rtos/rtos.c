@@ -45,16 +45,18 @@ rtos_schedule_restart:
 void rtos_init(void)
 {
     // initialize the RTOS
-
-    // when the current thread is
-    rtos_env.current = -1;
 }
 
 void rtos_scheduler(uint32_t *stack)
 {
     do
     {
+        // try to schedule a new RTOS element
         rtos_schedule();
+
+        // if we reach here it means that there are no active threads or signals pending
+
+
     } while (1);
 }
 
