@@ -22,6 +22,7 @@
 
 // standard includes
 #include <stdint.h>
+#include <stdbool.h>
 
 #define RTOS_STACK_SIZE (128)
 
@@ -33,6 +34,9 @@ struct thread
 
     /// Stack pointer when saving
     uint32_t sp;
+
+    /// Thread active state indication
+    bool active;
 };
 
 struct rtos
@@ -56,6 +60,7 @@ extern void rtos_yield(void);
 /// Switch between threads
 extern void rtos_switch(uint32_t *sp_new, uint32_t *sp_old);
 
+/// Create a thread context
 extern void rtos_create(uint32_t *sp_save, void(*fn)(void), uint32_t *stack);
 
 /// Initialize the RTOS

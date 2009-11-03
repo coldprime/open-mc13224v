@@ -12,6 +12,7 @@ LD_FLAGS= -nostdlib
 CC_INC= \
 	-I ../../src/compiler/gnuarm \
 	-I ../../src/build/registers \
+	-I ../../src/app/rtos \
 	-I ../../src/common
 
 # default target
@@ -51,7 +52,8 @@ rtos_objects= \
 	../../rtos/obj/boot/Init-RAMonly.o \
 	../../rtos/obj/common/Uart1.o \
 	../../rtos/obj/app/rtos/rtos_asm.o \
-	../../rtos/obj/app/rtos/rtos.o
+	../../rtos/obj/app/rtos/rtos.o \
+	../../rtos/obj/app/rtos_test.o
 
 # list of the generated register
 register_files= \
