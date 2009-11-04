@@ -1,25 +1,43 @@
+# list of init options
+#.set CLEAR_BSS, 0
+
 .section .vec, "ax"
     .align  4
-    .global vectors
-    .type   vectors, function
+    .global vector_reset
 
-vectors:
     # reset handler
+vector_reset:
     B       boot_reset
+
     # undefined handler
-    B       boot_undefined
+vector_undefined:
+    B       vector_undefined
+
     # SWI handler
-    B       boot_swi
+vector_swi:
+    B       vector_swi
+
     # Prefetch error handler
-    B       boot_pabort
+vector_pabort:
+    B       vector_pabort
+
     # abort handler
-    B       boot_dabort
+vector_dabort:
+    B       vector_dabort
+
     # reserved vector
-    B       boot_reserved
+vector_reserved:
+    B       vector_reserved
+
     #  - IRQ
-    B       boot_irq
+vector_irq:
+    B       vector_irq
+
     #  - FIQ
     B       FiqHandler
+
+    # this is here just for debug to return from an exception
+    SUBS PC, LR, #4
 
 .text
     .align  4
@@ -78,32 +96,13 @@ vectors:
 #/**
 # * RAM_BSS
 # */
+.ifdef CLEAR_BSS
 ram_bss_base:
     .word bss_base
 
 ram_bss_length:
     .word bss_length
-
-#/* ========================================================================
-#/**
-# * Unused (ABT, UNDEFINED, SYSUSR) Mode
-# */
-boot_stack_base_UNUSED:
-    .word stack_base_unused
-
-boot_stack_len_UNUSED:
-    .word stack_len_unused
-
-#/* ========================================================================
-#/**
-# * IRQ Mode
-# */
-boot_stack_base_IRQ:
-    .word stack_base_irq
-
-boot_stack_len_IRQ:
-    .word stack_len_irq
-
+.endif
 
 #/* ========================================================================
 #/**
@@ -112,9 +111,6 @@ boot_stack_len_IRQ:
 boot_stack_base_SVC:
     .word stack_base_svc
 
-boot_stack_len_SVC:
-    .word stack_len_svc
-
 
 #/* ========================================================================
 #/**
@@ -122,9 +118,6 @@ boot_stack_len_SVC:
 # */
 boot_stack_base_FIQ:
     .word stack_base_fiq
-
-boot_stack_len_FIQ:
-    .word stack_len_fiq
 
 
 #/* ========================================================================
@@ -136,25 +129,11 @@ boot_stack_len_FIQ:
 # * Function to handle reset vector
 # */
 boot_reset:
-    # Disable IRQ and FIQ before starting anything
-    MRS   R0, CPSR
-    ORR   R0, R0, #0xC0
-    MSR   CPSR_c, R0
-
     # ==================
-    # Setup all stacks
-
-    # Note: Sys and Usr mode are not used
-    BOOT_CHANGE_MODE SYS
-    BOOT_SET_STACK   UNUSED
-    BOOT_CHANGE_MODE ABT
-    BOOT_SET_STACK   UNUSED
-    BOOT_CHANGE_MODE UND
-    BOOT_SET_STACK   UNUSED
-    BOOT_CHANGE_MODE IRQ
-    BOOT_SET_STACK   IRQ
-    BOOT_CHANGE_MODE FIQ
-    BOOT_SET_STACK   FIQ
+    # switch the FIQ mode and disable all interrupts
+    MSR   CPSR_c, #BOOT_FIQ_IRQ_MASK | BOOT_MODE_FIQ
+    LDR   R0, boot_stack_base_FIQ
+    MOV   SP, R0
 
     # Clear FIQ banked registers while in FIQ mode
     MOV     R8, #0
@@ -163,11 +142,13 @@ boot_reset:
     MOV     R11, #0
     MOV     R12, #0
 
-    BOOT_CHANGE_MODE SVC
-    BOOT_SET_STACK   SVC
+    # ==================
+    # switch the SVC mode and keep all interrupts disabled
+    MSR   CPSR_c, #BOOT_FIQ_IRQ_MASK | BOOT_MODE_SVC
+    LDR   R0, boot_stack_base_SVC
+    MOV   SP, R0
 
-    # Stay in Supervisor Mode
-
+.ifdef CLEAR_BSS
     # Init the BSS section
     LDR     R0, ram_bss_base
     LDR     R1, ram_bss_length
@@ -182,6 +163,7 @@ init_bss_loop:
     MOVS    R1, R1, LSL #29
     STMCSIA R0!, {R4, R5}
     STRMI   R3, [R0]
+.endif
 
     # ==================
     # Clear Registers
@@ -202,31 +184,5 @@ init_bss_loop:
     # call to the main function
     B Main
 
-# undefined handler
-boot_undefined:
-    B boot_undefined
-
-# SWI handler
-boot_swi:
-    B boot_swi
-
-# Prefetch error handler
-boot_pabort:
-    B boot_pabort
-
-# abort handler
-boot_dabort:
-    B boot_dabort
-
-# reserved vector
-boot_reserved:
-    B boot_reserved
-
-# IRQ handler
-boot_irq:
-    B boot_irq
-
-    # this is here just for debug to return from an exception
-    SUBS PC, LR, #4
 
 
