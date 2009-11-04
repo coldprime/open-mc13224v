@@ -43,11 +43,11 @@ void Thread1(void)
     Uart1PutS("Thread1 started\n");
     while (1)
     {
-        // raise event 2
-        rtos_eventraise(2);
+        // raise signal 2
+        rtos_sigraise(2);
 
-        // wait for event 1
-        rtos_eventwait(1);
+        // wait for signal 1
+        rtos_sigwait(1);
 
         Uart1PutS("T1:");
         Uart1PutU32(cnt);
@@ -64,11 +64,11 @@ void Thread2(void)
     Uart1PutS("Thread2 started\n");
     while (1)
     {
-        // raise event 1
-        rtos_eventraise(1);
+        // raise signal 1
+        rtos_sigraise(1);
 
-        // wait for event 2
-        rtos_eventwait(2);
+        // wait for signal 2
+        rtos_sigwait(2);
 
         Uart1PutS("T2:");
         Uart1PutU32(cnt);
@@ -135,9 +135,9 @@ InitPlatform(void)
 static void InitOs(void)
 {
     // create the tasks
-    rtos_env.threads[0].eventmask = 0;
+    rtos_env.threads[0].sigmask = 0;
     rtos_create(&rtos_env.threads[0].sp, Thread1, &rtos_env.threads[0].stack[RTOS_STACK_SIZE]);
-    rtos_env.threads[1].eventmask = 0;
+    rtos_env.threads[1].sigmask = 0;
     rtos_create(&rtos_env.threads[1].sp, Thread2, &rtos_env.threads[1].stack[RTOS_STACK_SIZE]);
 
 }

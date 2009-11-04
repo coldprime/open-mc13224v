@@ -36,8 +36,8 @@ struct thread
     /// Thread stack pointer location for storage when thread goes inactive
     uint32_t sp;
 
-    /// Mask of the events on which the thread is currently waiting
-    uint32_t eventmask;
+    /// Mask of the signals on which the thread is currently waiting
+    uint32_t sigmask;
 };
 
 /// RTOS main environment
@@ -47,10 +47,13 @@ struct rtos
     struct thread threads[2];
 
     /// Current thread
-    int32_t current;
+    uint32_t current;
 
-    /// Thread stack pointer location for storage when thread goes inactive
+    /// Background stack pointer location for storage when no more threads active
     uint32_t sp;
+
+    /// Mask of the events that are set
+    uint32_t eventmask;
 };
 
 /// RTOS environment
@@ -73,18 +76,17 @@ extern void rtos_init(void);
 extern void rtos_scheduler(uint32_t *stack);
 
 /**
- * Raise events, this will awaken any thread pending on one of these events
+ * Wait for any signal in a signal mask
  *
- * @param eventmask Mask of the events to raise
+ * @param sigmask Mask of the signals to wait for
  */
-void rtos_eventraise(uint32_t eventmask);
+void rtos_eventwait(uint32_t sigmask);
 
 /**
- * Wait for any specified event
+ * Raise signal mask, this will awaken threads pending on anyone of these signals
  *
- * @param eventmask Mask of the events to wait for
+ * @param sigmask Mask of the signals to raise
  */
-void rtos_eventwait(uint32_t eventmask);
-
+void rtos_sigraise(uint32_t sigmask);
 
 #endif // _RTOS_H_

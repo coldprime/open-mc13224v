@@ -29,7 +29,7 @@ static void rtos_schedule(void)
 rtos_schedule_restart:
     for (cnt = 0; cnt < RTOS_TASK_NUM; cnt++)
     {
-        if (rtos_env.threads[cnt].eventmask == 0)
+        if (rtos_env.threads[cnt].sigmask == 0)
         {
             // save the current thread index
             rtos_env.current = cnt;
@@ -60,24 +60,24 @@ void rtos_scheduler(uint32_t *stack)
     } while (1);
 }
 
-void rtos_eventwait(uint32_t eventmask)
+void rtos_sigwait(uint32_t sigmask)
 {
     // wait for any of the events in the event mask
-    rtos_env.threads[rtos_env.current].eventmask = eventmask;
+    rtos_env.threads[rtos_env.current].sigmask = sigmask;
 
     // switch back to the scheduler
     rtos_switch(&rtos_env.sp, &rtos_env.threads[rtos_env.current].sp);
 }
 
-void rtos_eventraise(uint32_t eventmask)
+void rtos_sigraise(uint32_t sigmask)
 {
     int cnt;
     for (cnt = 0; cnt < RTOS_TASK_NUM; cnt++)
     {
-        if (rtos_env.threads[cnt].eventmask & eventmask)
+        if (rtos_env.threads[cnt].sigmask & sigmask)
         {
             // unlock the thread
-            rtos_env.threads[cnt].eventmask = 0;
+            rtos_env.threads[cnt].sigmask = 0;
         }
     }
 }
