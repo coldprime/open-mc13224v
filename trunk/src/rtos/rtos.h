@@ -56,9 +56,6 @@ struct rtos
 /// RTOS environment
 extern struct rtos rtos_env;
 
-/// Yield to the next thread
-extern void rtos_yield(void);
-
 /// Switch between threads
 extern void rtos_switch(uint32_t *sp_new, uint32_t *sp_old);
 

@@ -60,18 +60,6 @@ void rtos_scheduler(uint32_t *stack)
     } while (1);
 }
 
-void rtos_yield(void)
-{
-    uint8_t old;
-
-    // this is a fake switch selection : move to the next thread
-    old = rtos_env.current;
-    rtos_env.current = (rtos_env.current + 1)%2;
-
-    // this function should be called from the current running task
-    rtos_switch(&rtos_env.threads[rtos_env.current].sp, &rtos_env.threads[old].sp);
-}
-
 void rtos_eventwait(uint32_t eventmask)
 {
     // wait for any of the events in the event mask
