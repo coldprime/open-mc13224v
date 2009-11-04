@@ -104,21 +104,6 @@ ram_bss_length:
     .word bss_length
 .endif
 
-#/* ========================================================================
-#/**
-# * Supervisor Mode
-# */
-boot_stack_base_SVC:
-    .word stack_base_svc
-
-
-#/* ========================================================================
-#/**
-# * FIQ Mode
-# */
-boot_stack_base_FIQ:
-    .word stack_base_fiq
-
 
 #/* ========================================================================
 # *                                Functions
@@ -132,7 +117,7 @@ boot_reset:
     # ==================
     # switch the FIQ mode and disable all interrupts
     MSR   CPSR_c, #BOOT_FIQ_IRQ_MASK | BOOT_MODE_FIQ
-    LDR   R0, boot_stack_base_FIQ
+    LDR   R0, =stack_base_fiq
     MOV   SP, R0
 
     # Clear FIQ banked registers while in FIQ mode
@@ -145,7 +130,7 @@ boot_reset:
     # ==================
     # switch the SVC mode and keep all interrupts disabled
     MSR   CPSR_c, #BOOT_FIQ_IRQ_MASK | BOOT_MODE_SVC
-    LDR   R0, boot_stack_base_SVC
+    LDR   R0, =stack_base_svc
     MOV   SP, R0
 
 .ifdef CLEAR_BSS
