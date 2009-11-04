@@ -12,6 +12,7 @@ CC_INC= \
 	-I ../../src/compiler/gnuarm \
 	-I ../../src/build/registers \
 	-I ../../src/rtos \
+	-I ../../src/proc \
 	-I ../../src/common
 
 # default target

@@ -19,11 +19,22 @@
 
 
 #include "rtos.h"
+#include "proc.h"
 
 #include "Uart1.h"
 
 #include "reg_gpio.h"
 #include "reg_crm.h"
+#include "reg_itc.h"
+
+
+__FIQ void FiqHandler(void)
+{
+    // clear any pending interrupt
+    crm_status_set(0xFFFF);
+
+    Uart1PutS("FIQ\n");
+}
 
 void Thread1(void)
 {
@@ -74,22 +85,47 @@ void Thread2(void)
 static void
 InitPlatform(void)
 {
-    // set:
-    //   - the clock frequency for the whole platform to 24MHz (divider = 0)
-    //   - JTAG security enforced off
-    //   - SPIF uses 1.8
-    //   - power source is VBATT
+    // CRM configuration:
+    // + system configuration
+    //   * the clock frequency for the whole platform to 24MHz (divider = 0)
+    //   * JTAG security enforced off
+    //   * SPIF uses 1.8
+    //   * power source is VBATT
     crm_sys_cntl_pack(0, 0, 1, 1, 0, 0);
 
-    // GPIOS
-    // configure the GPIOs 25-23 as output (KBI3-KBI1), connect to LED control
+    // + wakeup configuration
+    //   + enable WU pads and interrupts
+    //   + configure edge detection on low transition
+    crm_wu_cntl_set((crm_wu_cntl_get() & ~EXT_WU_POL_MASK) |
+            EXT_WU_IEN_MASK | EXT_WU_EN_MASK | EXT_WU_EDGE_MASK);
+
+    // + status configuration
+    //   * clear any pending interrupt
+    crm_status_set(0xFFFF);
+
+    // GPIO configuration:
+    // + direction configuration
+    //   * configure the GPIOs 25-23 as output (KBI3-KBI1), connect to LED control
     gpio_pad_dir0_set(7 << 23);
 
-    // configure the GPIO15-14 to UART1 (UART1 TX and RX)
+    // + function configuration
+    //   * configure the GPIO15-14 to UART1 (UART1 TX and RX)
     gpio_func_sel0_set((0x01 << (14*2)) | (0x01 << (15*2)));
 
-    // clear the LEDs
+    // + pull up configuration
+    //   * enable the PU on the KBI[7..4] pads
+    gpio_pad_pu_en0_set(gpio_pad_pu_en0_get() | (0xF<<26));
+    gpio_pad_pu_sel0_set(gpio_pad_pu_sel0_get() | (0xF<<26));
+
+    // + init data configuration
+    //   * clear the LEDs
     gpio_data0_set(0);
+
+    // ITC configuration:
+    // enable CRM (3) in interrupt controller
+    ennum_setf(3);
+    inttype_setf(1<<3);
+
 }
 
 
@@ -121,6 +157,9 @@ void Main(void)
 
     // initialize the Os
     InitOs();
+
+    // release the interrupts
+    PROC_INT_START();
 
     // schedule the next thread, should never return
     rtos_scheduler(0);

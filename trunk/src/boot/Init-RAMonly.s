@@ -19,11 +19,10 @@ vectors:
     #  - IRQ
     B       boot_irq
     #  - FIQ
-    B       boot_fiq
+    B       FiqHandler
 
 .text
     .align  4
-
 
 #/* ========================================================================
 # *                                Constants
@@ -226,10 +225,6 @@ boot_reserved:
 # IRQ handler
 boot_irq:
     B boot_irq
-
-# FIQ handler
-boot_fiq:
-    B boot_fiq
 
     # this is here just for debug to return from an exception
     SUBS PC, LR, #4
