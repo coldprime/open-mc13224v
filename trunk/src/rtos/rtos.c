@@ -17,67 +17,155 @@
  *    along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+// minimum include
 #include "rtos.h"
 
+// processor related macros
+#include "proc.h"
+
+/// RTOS environment
 struct rtos rtos_env;
 
-/// Schedule the next thread in the RTOS
-static void rtos_schedule(void)
+// define event handlers
+static void schedule_threads(void);
+extern void fiq_event(void);
+
+/// Main descriptor of the event handlers
+static void (* const events[])(void) =
 {
-    int cnt;
+    [RTOS_E_THREADS_INDEX] = schedule_threads,
+    [RTOS_E_FIQ_INDEX]     = fiq_event
+};
 
-rtos_schedule_restart:
-    for (cnt = 0; cnt < RTOS_TASK_NUM; cnt++)
+/// Definition of the stack for the various threads
+static uint32_t thread0_stack[32];
+static uint32_t thread1_stack[16];
+
+extern void Thread0(void);
+extern void Thread1(void);
+
+#define ARRAY_SIZE(x) (sizeof(x)/sizeof(x[0]))
+#define STACK_BASE(x) (&(((uint32_t *)(x))[ARRAY_SIZE(x)]))
+/// Thread descriptors array
+static const struct thread_d threads[] =
+{
+    [RTOS_T_THREAD0] = {Thread0, STACK_BASE(thread0_stack)},
+    [RTOS_T_THREAD1] = {Thread1, STACK_BASE(thread1_stack)}
+};
+
+static struct thread_c thread_contexts[ARRAY_SIZE(threads)];
+
+/// Schedule the threads in the RTOS
+static void schedule_threads(void)
+{
+    int i;
+
+    // loop as long as there are active threads
+    while (rtos_env.eventmask & RTOS_E_THREADS)
     {
-        if (rtos_env.threads[cnt].sigmask == 0)
+        // start by clearing the pending event
+        rtos_eventclear(RTOS_E_THREADS);
+
+        for (i = 0; i < ARRAY_SIZE(threads); i++)
         {
-            // save the current thread index
-            rtos_env.current = cnt;
+            if (rtos_env.threads[i].sigmask == 0)
+            {
+                // save the current thread index
+                rtos_env.thread_cur = i;
 
-            // switch between the current task and the new one to schedule
-            rtos_switch(&rtos_env.threads[cnt].sp, &rtos_env.sp);
+                // switch between the current task and the new one to schedule
+                rtos_switch(&rtos_env.threads[i].sp, &rtos_env.sp);
 
-            goto rtos_schedule_restart;
+            }
         }
     }
 }
 
 void rtos_init(void)
 {
-    // initialize the RTOS
+    int i;
+
+    // save the thread contexts array
+    rtos_env.threads = thread_contexts;
+
+    // initialize the threads
+    for (i = 0; i < ARRAY_SIZE(threads); i++)
+    {
+        // create the tasks as active to initialize them
+        rtos_env.threads[i].sigmask = 0;
+        rtos_create(&rtos_env.threads[i].sp, threads[i].fn, threads[i].stack);
+    }
+
+    // by default, set a thread event to make sure the threads start up
+    rtos_eventraise(RTOS_E_THREADS);
 }
 
-void rtos_scheduler(uint32_t *stack)
+void rtos_scheduler(uint32_t const *stack)
 {
+    // reset the stack
+    PROC_SP_RESET(stack);
+
     do
     {
-        // try to schedule a new RTOS element
-        rtos_schedule();
+        uint32_t field;
 
-        // if we reach here it means that there are no active threads or signals pending
+        field = rtos_env.eventmask;
+        while (field)
+        {
+            uint32_t event;
 
+            // return the next event to handle
+            PROC_CLZ(event, field);
 
+            // call the event handler
+            events[event]();
+        }
     } while (1);
 }
 
 void rtos_sigwait(uint32_t sigmask)
 {
     // wait for any of the events in the event mask
-    rtos_env.threads[rtos_env.current].sigmask = sigmask;
+    rtos_env.threads[rtos_env.thread_cur].sigmask = sigmask;
 
     // switch back to the scheduler
-    rtos_switch(&rtos_env.sp, &rtos_env.threads[rtos_env.current].sp);
+    rtos_switch(&rtos_env.sp, &rtos_env.threads[rtos_env.thread_cur].sp);
 }
 
 void rtos_sigraise(uint32_t sigmask)
 {
     int cnt;
-    for (cnt = 0; cnt < RTOS_TASK_NUM; cnt++)
+    for (cnt = 0; cnt < ARRAY_SIZE(threads); cnt++)
     {
         if (rtos_env.threads[cnt].sigmask & sigmask)
         {
             // unlock the thread
             rtos_env.threads[cnt].sigmask = 0;
+
+            // force a thread schedule event
+            rtos_eventraise(RTOS_E_THREADS);
         }
     }
+}
+
+void rtos_eventraise(uint32_t eventmask)
+{
+    // protect the events related operations from interrupts
+    PROC_INT_DISABLE();
+
+    // set new interrupts
+    rtos_env.eventmask |= eventmask;
+
+    PROC_INT_RESTORE();
+}
+
+void rtos_eventclear(uint32_t eventmask)
+{
+    // protect the events related operations from interrupts
+    PROC_INT_DISABLE();
+
+    // clear interrupts
+    rtos_env.eventmask &= ~eventmask;
+
+    PROC_INT_RESTORE();
 }

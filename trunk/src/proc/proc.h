@@ -92,4 +92,13 @@ do {                                                                        \
     __asm volatile("MOV SP, %0" : : "r"(__v));                              \
 } while(0)
 
+/** @brief Count the leading zeros in a variable.
+ * @param[out] __c Result of the count
+ * @param[in] __v Variable to count the leading zeros in
+ */
+#define PROC_CLZ(__c, __v)                                                  \
+do {                                                                        \
+    __c = 0;                                                                \
+} while(0)
+
 #endif // _PROC_H_

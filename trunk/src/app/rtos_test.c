@@ -27,6 +27,8 @@
 #include "reg_crm.h"
 #include "reg_itc.h"
 
+// import symbol from the linker scripts
+extern char stack_base_svc;
 
 __FIQ void FiqHandler(void)
 {
@@ -36,11 +38,16 @@ __FIQ void FiqHandler(void)
     Uart1PutS("FIQ\n");
 }
 
-void Thread1(void)
+void fiq_event(void)
+{
+
+}
+
+void Thread0(void)
 {
     uint32_t cnt = 0;
 
-    Uart1PutS("Thread1 started\n");
+    Uart1PutS("Thread0 started\n");
     while (1)
     {
         // raise signal 2
@@ -49,19 +56,18 @@ void Thread1(void)
         // wait for signal 1
         rtos_sigwait(1);
 
-        Uart1PutS("T1:");
+        Uart1PutS("T0:");
         Uart1PutU32(cnt);
         Uart1PutS("\n");
-//        rtos_yield();
         cnt++;
     }
 }
 
-void Thread2(void)
+void Thread1(void)
 {
     uint32_t cnt = 0xFFFFFFFF;
 
-    Uart1PutS("Thread2 started\n");
+    Uart1PutS("Thread1 started\n");
     while (1)
     {
         // raise signal 1
@@ -70,10 +76,9 @@ void Thread2(void)
         // wait for signal 2
         rtos_sigwait(2);
 
-        Uart1PutS("T2:");
+        Uart1PutS("T1:");
         Uart1PutU32(cnt);
         Uart1PutS("\n");
-//        rtos_yield();
         cnt--;
     }
 }
@@ -129,19 +134,6 @@ InitPlatform(void)
 }
 
 
-/**
- * Initialize the elements of the Operating System.
- */
-static void InitOs(void)
-{
-    // create the tasks
-    rtos_env.threads[0].sigmask = 0;
-    rtos_create(&rtos_env.threads[0].sp, Thread1, &rtos_env.threads[0].stack[RTOS_STACK_SIZE]);
-    rtos_env.threads[1].sigmask = 0;
-    rtos_create(&rtos_env.threads[1].sp, Thread2, &rtos_env.threads[1].stack[RTOS_STACK_SIZE]);
-
-}
-
 void Main(void)
 {
     // initialize the whole platform
@@ -156,12 +148,12 @@ void Main(void)
     Uart1PutS("\n");
 
     // initialize the Os
-    InitOs();
+    rtos_init();
 
     // release the interrupts
     PROC_INT_START();
 
-    // schedule the next thread, should never return
-    rtos_scheduler(0);
+    // schedule the next thread, should never return, pass the base pointer of the stack
+    rtos_scheduler(&stack_base_svc);
 }
 
