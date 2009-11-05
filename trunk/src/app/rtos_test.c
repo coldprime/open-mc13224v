@@ -27,15 +27,46 @@
 #include "reg_crm.h"
 #include "reg_itc.h"
 
+#define ITC_CRM_INDEX (3)
+
 // import symbol from the linker scripts
 extern char stack_base_svc;
 
 __FIQ void FiqHandler(void)
 {
-    // clear any pending interrupt
-    crm_status_set(0xFFFF);
+    uint8_t fiq;
 
-    Uart1PutS("FIQ\n");
+    // check were the FIQ is coming from
+    fiq = fivector_getf();
+
+    switch (fiq)
+    {
+    case ITC_CRM_INDEX:
+        fiq = ext_wu_evt_getf();
+
+        if (fiq & 1)
+        {
+            Uart1PutS("PB0\n");
+        }
+        if (fiq & 2)
+        {
+            Uart1PutS("PB1\n");
+        }
+        if (fiq & 4)
+        {
+            Uart1PutS("PB2\n");
+        }
+        if (fiq & 8)
+        {
+            Uart1PutS("PB3\n");
+        }
+        // clear any pending interrupt
+        crm_status_set(0xFFFF);
+    break;
+    default:
+        ASSERT(0);
+        break;
+    }
 }
 
 void fiq_event(void)
