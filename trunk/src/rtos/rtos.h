@@ -27,8 +27,8 @@
 /// Definition of the events in the system, highest priority first
 enum
 {
-    RTOS_E_THREADS_INDEX = 0,
-    RTOS_E_FIQ_INDEX
+    RTOS_E_FIQ_INDEX = 0,
+    RTOS_E_THREADS_INDEX
 };
 
 /** Definition of the event bits for the raise operations the inversion (31-x) is used

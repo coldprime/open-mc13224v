@@ -93,12 +93,56 @@ do {                                                                        \
 } while(0)
 
 /** @brief Count the leading zeros in a variable.
+ * Extracted from a web site and modified to work faster because there should always be
+ * a bit set.
+ *
+ * The algorithm is the following:
+ * __c = 0;
+ * if ((__v >> 16) == 0)
+ * {
+ *     __c += 16
+ *     __v = __v << 16
+ * }
+ * if ((__v & 0xFF000000) == 0)
+ * {
+ *     __c += 8
+ *     __v = __v << 8;
+ * }
+ * if ((__v & 0xF0000000) == 0)
+ * {
+ *     __c += 4
+ *     __v = __v << 4;
+ * }
+ * if ((__v & 0xC0000000) == 0)
+ * {
+ *     __c += 2
+ *     __v = __v << 2;
+ * }
+ * if ((__v & 0x80000000) == 0)
+ * {
+ *     __c += 1
+ * }
  * @param[out] __c Result of the count
  * @param[in] __v Variable to count the leading zeros in
  */
 #define PROC_CLZ(__c, __v)                                                  \
 do {                                                                        \
-    __c = 0;                                                                \
+    __asm volatile("lsrs    %0,%1,#16;"                                     \
+                   "mov     %0,#0; "                                        \
+                   "addeq   %0,%0,#16;"                                     \
+                   "lsleq   %1,%1,#16;"                                     \
+                   "tst     %1,#0xff000000;"                                \
+                   "addeq   %0,%0,#8;"                                      \
+                   "lsleq   %1,%1,#8;"                                      \
+                   "tst     %1,#0xf0000000;"                                \
+                   "addeq   %0,%0,#4;"                                      \
+                   "lsleq   %1,%1,#4;"                                      \
+                   "tst     %1,#0xc0000000;"                                \
+                   "addeq   %0,%0,#2;"                                      \
+                   "lsleq   %1,%1,#2;"                                      \
+                   "tst     %1,#0x80000000;"                                \
+                   "addeq    %0,%0,#1" : "=r"(__c): "r"(__v)); \
 } while(0)
+
 
 #endif // _PROC_H_

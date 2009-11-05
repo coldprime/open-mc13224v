@@ -60,23 +60,18 @@ static void schedule_threads(void)
 {
     int i;
 
-    // loop as long as there are active threads
-    while (rtos_env.eventmask & RTOS_E_THREADS)
+    // start by clearing the pending event
+    rtos_eventclear(RTOS_E_THREADS);
+
+    for (i = 0; i < ARRAY_SIZE(threads); i++)
     {
-        // start by clearing the pending event
-        rtos_eventclear(RTOS_E_THREADS);
-
-        for (i = 0; i < ARRAY_SIZE(threads); i++)
+        if (rtos_env.threads[i].sigmask == 0)
         {
-            if (rtos_env.threads[i].sigmask == 0)
-            {
-                // save the current thread index
-                rtos_env.thread_cur = i;
+            // save the current thread index
+            rtos_env.thread_cur = i;
 
-                // switch between the current task and the new one to schedule
-                rtos_switch(&rtos_env.threads[i].sp, &rtos_env.sp);
-
-            }
+            // switch between the current task and the new one to schedule
+            rtos_switch(&rtos_env.threads[i].sp, &rtos_env.sp);
         }
     }
 }
@@ -120,6 +115,9 @@ void rtos_scheduler(uint32_t const *stack)
             // call the event handler
             events[event]();
         }
+
+        // otherwise go to sleep, waiting for an interrupt
+
     } while (1);
 }
 

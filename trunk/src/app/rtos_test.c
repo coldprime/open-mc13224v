@@ -154,6 +154,6 @@ void Main(void)
     PROC_INT_START();
 
     // schedule the next thread, should never return, pass the base pointer of the stack
-    rtos_scheduler(&stack_base_svc);
+    rtos_scheduler((uint32_t*)&stack_base_svc);
 }
 
