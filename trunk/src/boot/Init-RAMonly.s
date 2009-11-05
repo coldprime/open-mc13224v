@@ -57,36 +57,8 @@ vector_irq:
 .set BOOT_MODE_SYS, 0x1F
 
 .set BOOT_FIQ_IRQ_MASK, 0xC0
+.set BOOT_FIQ_MASK,     0x40
 .set BOOT_IRQ_MASK,     0x80
-
-
-#/* ========================================================================
-# *                                Macros
-# * ======================================================================== */
-
-#/* ========================================================================
-#/**
-# * Macro for switching ARM mode
-# */
-    .macro BOOT_CHANGE_MODE newmode
-        MRS   R0, CPSR
-        BIC   R0, R0, #BOOT_MODE_MASK
-        ORR   R0, R0, #BOOT_MODE_\newmode
-        MSR   CPSR_c, R0
-    .endm
-
-#/* ========================================================================
-#/**
-# * Macro for setting the stack
-# */
-    .macro BOOT_SET_STACK stackname
-        LDR   R0, boot_stack_base_\stackname
-        LDR   R1, boot_stack_len_\stackname
-        ADD   R0, R0, R1
-        MOV   SP, R0
-    .endm
-
-
 
 #/* ========================================================================
 # *                                Globals
