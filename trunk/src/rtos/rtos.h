@@ -27,16 +27,17 @@
 /// Definition of the events in the system, highest priority first
 enum
 {
-    RTOS_E_FIQ_INDEX = 0,
-    RTOS_E_THREADS_INDEX
+    RTOS_E_PB0_INDEX = 0,
+    RTOS_E_THREADS_INDEX,
+    RTOS_E_PB1_INDEX,
+    RTOS_E_PB2_INDEX,
+    RTOS_E_PB3_INDEX
 };
 
 /** Definition of the event bits for the raise operations the inversion (31-x) is used
  * to improve the scheduler timing with clz operation which returns the leftmost 0 count
  */
-#define RTOS_E_MASK(x) (1<<(31-(x)))
-#define RTOS_E_THREADS (RTOS_E_MASK(RTOS_E_THREADS_INDEX))
-#define RTOS_E_FIQ (RTOS_E_MASK(RTOS_E_FIQ_INDEX))
+#define RTOS_EVENT(__e) (1<<(31-(RTOS_E_ ## __e ## _INDEX)))
 
 /// Definition of the threads in the system
 enum

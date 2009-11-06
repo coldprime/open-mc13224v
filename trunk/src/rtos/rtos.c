@@ -28,13 +28,19 @@ struct rtos rtos_env;
 
 // define event handlers
 static void schedule_threads(void);
-extern void fiq_event(void);
+extern void event_pb0(void);
+extern void event_pb1(void);
+extern void event_pb2(void);
+extern void event_pb3(void);
 
 /// Main descriptor of the event handlers
 static void (* const events[])(void) =
 {
     [RTOS_E_THREADS_INDEX] = schedule_threads,
-    [RTOS_E_FIQ_INDEX]     = fiq_event
+    [RTOS_E_PB0_INDEX]     = event_pb0,
+    [RTOS_E_PB1_INDEX]     = event_pb1,
+    [RTOS_E_PB2_INDEX]     = event_pb2,
+    [RTOS_E_PB3_INDEX]     = event_pb3
 };
 
 /// Definition of the stack for the various threads
@@ -61,7 +67,7 @@ static void schedule_threads(void)
     int i;
 
     // start by clearing the pending event
-    rtos_eventclear(RTOS_E_THREADS);
+    rtos_eventclear(RTOS_EVENT(THREADS));
 
     for (i = 0; i < ARRAY_SIZE(threads); i++)
     {
@@ -80,6 +86,8 @@ void rtos_init(void)
 {
     int i;
 
+    // initialize the event pending
+    rtos_env.eventmask = 0;
     // save the thread contexts array
     rtos_env.threads = thread_contexts;
 
@@ -90,9 +98,6 @@ void rtos_init(void)
         rtos_env.threads[i].sigmask = 0;
         rtos_create(&rtos_env.threads[i].sp, threads[i].fn, threads[i].stack);
     }
-
-    // by default, set a thread event to make sure the threads start up
-    rtos_eventraise(RTOS_E_THREADS);
 }
 
 void rtos_scheduler(uint32_t const *stack)
@@ -102,17 +107,14 @@ void rtos_scheduler(uint32_t const *stack)
 
     do
     {
-        uint32_t field;
-
-        field = rtos_env.eventmask;
-        while (field)
+        while (rtos_env.eventmask)
         {
             uint32_t event;
 
             // return the next event to handle
-            PROC_CLZ(event, field);
+            PROC_CLZ(event, rtos_env.eventmask);
 
-            // call the event handler
+            // call the appropriate event handler
             events[event]();
         }
 
@@ -141,7 +143,7 @@ void rtos_sigraise(uint32_t sigmask)
             rtos_env.threads[cnt].sigmask = 0;
 
             // force a thread schedule event
-            rtos_eventraise(RTOS_E_THREADS);
+            rtos_eventraise(RTOS_EVENT(THREADS));
         }
     }
 }

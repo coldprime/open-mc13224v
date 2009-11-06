@@ -44,34 +44,65 @@ __FIQ void FiqHandler(void)
     case ITC_CRM_INDEX:
         fiq = ext_wu_evt_getf();
 
+
+        Uart1PutS("CRM\n");
+
         if (fiq & 1)
         {
+            rtos_eventraise(RTOS_EVENT(PB0));
             Uart1PutS("PB0\n");
         }
         if (fiq & 2)
         {
+            rtos_eventraise(RTOS_EVENT(PB1));
             Uart1PutS("PB1\n");
         }
         if (fiq & 4)
         {
+            rtos_eventraise(RTOS_EVENT(PB2));
             Uart1PutS("PB2\n");
         }
         if (fiq & 8)
         {
+            rtos_eventraise(RTOS_EVENT(PB3));
             Uart1PutS("PB3\n");
         }
         // clear any pending interrupt
         crm_status_set(0xFFFF);
     break;
     default:
+        Uart1PutS("Unsupported FIQ\n");
         ASSERT(0);
         break;
     }
 }
 
-void fiq_event(void)
+void event_pb0(void)
 {
+    Uart1PutS("EVT_PB0\n");
 
+    rtos_eventclear(RTOS_EVENT(PB0));
+}
+
+void event_pb1(void)
+{
+    Uart1PutS("EVT_PB1\n");
+
+    rtos_eventclear(RTOS_EVENT(PB1));
+}
+
+void event_pb2(void)
+{
+    Uart1PutS("EVT_PB2\n");
+
+    rtos_eventclear(RTOS_EVENT(PB2));
+}
+
+void event_pb3(void)
+{
+    Uart1PutS("EVT_PB3\n");
+
+    rtos_eventclear(RTOS_EVENT(PB3));
 }
 
 void Thread0(void)
@@ -82,7 +113,7 @@ void Thread0(void)
     while (1)
     {
         // raise signal 2
-        rtos_sigraise(2);
+//        rtos_sigraise(2);
 
         // wait for signal 1
         rtos_sigwait(1);
@@ -102,7 +133,7 @@ void Thread1(void)
     while (1)
     {
         // raise signal 1
-        rtos_sigraise(1);
+//        rtos_sigraise(1);
 
         // wait for signal 2
         rtos_sigwait(2);
@@ -183,6 +214,8 @@ void Main(void)
 
     // release the interrupts
     PROC_INT_START();
+
+//    while (1);
 
     // schedule the next thread, should never return, pass the base pointer of the stack
     rtos_scheduler((uint32_t*)&stack_base_svc);
