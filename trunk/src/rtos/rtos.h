@@ -21,6 +21,7 @@
 #define _RTOS_H_
 
 // standard includes
+#include <stddef.h>
 #include <stdint.h>
 
 
@@ -56,14 +57,31 @@ struct thread_d
     uint32_t *stack;
 };
 
+struct rtos_msg
+{
+    /// Pointer to the next message in the queue
+    struct rtos_msg *next;
+
+    /// Bitfield of the configuration flags of the message
+    uint32_t flags;
+
+
+};
+
 /// Thread context from the RTOS point of view
 struct thread_c
 {
-    /// Thread stack pointer location for storage when thread goes inactive
-    uint32_t sp;
+    /// Head of the list of pending messages for the thread
+    struct rtos_msg* pending;
+
+    /// Head of the saved messages for the thread
+    struct rtos_msg* saved;
 
     /// Mask of the signals on which the thread is currently waiting
     uint32_t sigmask;
+
+    /// Thread stack pointer location for storage when thread is pending on signals
+    uint32_t sp;
 };
 
 /// RTOS main environment
@@ -80,6 +98,7 @@ struct rtos
 
     /// Mask of the events that are set (volatile because it can be updated under int)
     volatile uint32_t eventmask;
+
 };
 
 /// RTOS environment

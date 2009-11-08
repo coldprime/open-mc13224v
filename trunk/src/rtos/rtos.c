@@ -20,6 +20,7 @@
 // minimum include
 #include "rtos.h"
 
+
 // processor related macros
 #include "proc.h"
 
@@ -94,7 +95,12 @@ void rtos_init(void)
     // initialize the threads
     for (i = 0; i < ARRAY_SIZE(threads); i++)
     {
-        // create the tasks as active to initialize them
+        // create the threads as inactive
+        rtos_env.threads[i].pending = NULL;
+        rtos_env.threads[i].saved = NULL;
+        rtos_env.threads[i].sp = 0;
+
+        // by default there is no pending mask
         rtos_env.threads[i].sigmask = 0;
         rtos_create(&rtos_env.threads[i].sp, threads[i].fn, threads[i].stack);
     }
