@@ -1,5 +1,5 @@
 /*
- * RTOS application: test an RTOS
+ * RTOS kernel implementation
  *
  *    Copyright (C) 2009 Louis Caron
  *
@@ -26,6 +26,21 @@
 
 /// RTOS environment
 struct rtos rtos_env;
+
+/// Free memory block delimiter structure (size must be word multiple)
+struct rtos_mem_free
+{
+    struct rtos_mem_free *next;     ///< Pointer to the next block
+    size_t size;                    ///< Size of the current block (including delimiter)
+};
+
+/// Used memory block delimiter structure (size must be word multiple)
+struct rtos_mem_used
+{
+    uint32_t size;                  ///< Size of the current block (including delimiter)
+};
+
+
 
 // define event handlers
 static void schedule_threads(void);
@@ -83,7 +98,7 @@ static void schedule_threads(void)
     }
 }
 
-void rtos_init(void)
+void rtos_init(void* heap_bottom, void* heap_top)
 {
     int i;
 
@@ -104,6 +119,13 @@ void rtos_init(void)
         rtos_env.threads[i].sigmask = 0;
         rtos_create(&rtos_env.threads[i].sp, threads[i].fn, threads[i].stack);
     }
+
+    // align address of heap bottom on word boundary
+    rtos_env.mfree = (struct rtos_mem_free*)heap_bottom;
+
+    // initialize the first block
+    rtos_env.mfree->size = (size_t)heap_top - (size_t)rtos_env.mfree;
+    rtos_env.mfree->next = NULL;
 }
 
 void rtos_scheduler(uint32_t const *stack)
@@ -131,7 +153,7 @@ void rtos_scheduler(uint32_t const *stack)
 
 void rtos_sigwait(uint32_t sigmask)
 {
-    // wait for any of the events in the event mask
+    // wait for any of the signals in the signal mask
     rtos_env.threads[rtos_env.thread_cur].sigmask = sigmask;
 
     // switch back to the scheduler
@@ -159,9 +181,10 @@ void rtos_eventraise(uint32_t eventmask)
     // protect the events related operations from interrupts
     PROC_INT_DISABLE();
 
-    // set new interrupts
+    // set new events
     rtos_env.eventmask |= eventmask;
 
+    // restore interrupts
     PROC_INT_RESTORE();
 }
 
@@ -170,8 +193,13 @@ void rtos_eventclear(uint32_t eventmask)
     // protect the events related operations from interrupts
     PROC_INT_DISABLE();
 
-    // clear interrupts
+    // clear events
     rtos_env.eventmask &= ~eventmask;
 
+    // restore interrupts
     PROC_INT_RESTORE();
 }
+
+
+
+

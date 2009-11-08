@@ -43,12 +43,14 @@ SECTIONS
         *(.bss)
         *(COMMON)
         bss_end = .;
+        sram_heap_bottom = .;
     } > sram
     bss_length = bss_end - bss_base;
 
     /* SVC STACK */
     RAM_STACK_SVC ORIGIN(sram) + LENGTH(sram) - stack_len_fiq - stack_len_svc (NOLOAD):
     {
+        sram_heap_top = .;
         . = stack_len_svc;
         stack_base_svc = .;
     } > sram
@@ -61,3 +63,7 @@ SECTIONS
         stack_base_fiq = .;
     } > sram
 }
+
+/* Definition of the heap area */
+heap_bottom = (sram_heap_bottom + 3) & ~ 3;
+heap_top = (sram_heap_top) & ~ 3;

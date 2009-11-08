@@ -75,7 +75,7 @@ register_files= \
 
 
 ../../build/rtos/rtos.elf: $(rtos_objects)
-	$(LD) $(LD_FLAGS) -o $@ $(rtos_objects) -T ../../scripts/ld/RAMonly.lds
+	$(LD) $(LD_FLAGS) -Map $(@:.elf=.map) -o $@ $(rtos_objects) -T ../../scripts/ld/RAMonly.lds
 
 .PHONY: rtos clean install
 .SILENT: rtos clean install

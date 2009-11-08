@@ -29,8 +29,10 @@
 
 #define ITC_CRM_INDEX (3)
 
-// import symbol from the linker scripts
+// import symbols from the linker scripts
 extern char stack_base_svc;
+extern char heap_bottom;
+extern char heap_top;
 
 __FIQ void FiqHandler(void)
 {
@@ -210,7 +212,7 @@ void Main(void)
     Uart1PutS("\n");
 
     // initialize the Os
-    rtos_init();
+    rtos_init(&heap_bottom, &heap_top);
 
     // release the interrupts
     PROC_INT_START();

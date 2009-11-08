@@ -24,6 +24,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+// forward declarations
+struct rtos_mem_free;
 
 /// Definition of the events in the system, highest priority first
 enum
@@ -99,6 +101,8 @@ struct rtos
     /// Mask of the events that are set (volatile because it can be updated under int)
     volatile uint32_t eventmask;
 
+    /// Pointer to the first free block to use for allocate/free routines
+    struct rtos_mem_free *mfree;
 };
 
 /// RTOS environment
@@ -121,8 +125,11 @@ extern void rtos_create(uint32_t *sp_save, void(*fn)(void), uint32_t const *stac
 
 /**
  * Initialize the RTOS
+ *
+ * @param heap_bottom Pointer to first word in the heap (must be word aligned)
+ * @param heap_top Pointer to last word lower or equal to end of heap
  */
-extern void rtos_init(void);
+extern void rtos_init(void* heap_bottom, void* heap_top);
 
 /**
  * Launch the RTOS scheduler, this function never returns
@@ -153,5 +160,21 @@ extern void rtos_eventraise(uint32_t eventmask);
  * @param[in] eventmask Mask of the events to clear
  */
 extern void rtos_eventclear(uint32_t eventmask);
+
+/**
+ * Memory allocator specific to the RTOS
+ *
+ * @param size Amount of memory requested
+ */
+extern void *rtos_malloc(size_t size);
+
+/**
+ * Free an allocated block
+ *
+ * @param pointer Pointer to the allocated block to free
+ */
+extern void rtos_free(void *pointer);
+
+
 
 #endif // _RTOS_H_
