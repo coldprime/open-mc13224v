@@ -20,9 +20,11 @@
 // minimum include
 #include "rtos.h"
 
+// compiler related macros
+#include "compiler.h"
 
 // processor related macros
-#include "proc.h"
+#include "proc/proc.h"
 
 /// RTOS environment
 struct rtos rtos_env;
@@ -37,7 +39,7 @@ struct rtos_mem_free
 /// Used memory block delimiter structure (size must be word multiple)
 struct rtos_mem_used
 {
-    uint32_t size;                  ///< Size of the current block (including delimiter)
+    size_t size;                    ///< Size of the current block (including delimiter)
 };
 
 
@@ -200,6 +202,133 @@ void rtos_eventclear(uint32_t eventmask)
     PROC_INT_RESTORE();
 }
 
+void *rtos_malloc(size_t size)
+{
+    struct rtos_mem_free *node, *found;
+    struct rtos_mem_used *alloc;
+    size_t totalsize;
+
+    // initialize the pointers
+    found = NULL;
+
+    // compute total block size: requested size PLUS used descriptor size
+    totalsize = ((size + 3) & (~3)) + sizeof(struct rtos_mem_used);
+
+    // sanity check: the totalsize should be large enough to hold free block descriptor
+    ASSERT(totalsize >= sizeof(struct rtos_mem_free));
+
+    // point to the first free block in the memory
+    node = rtos_env.mfree;
+
+    // go through free memory blocks list
+    while (node != NULL)
+    {
+        // check if there is enough room in this free block
+        if (node->size >= (totalsize + sizeof(struct rtos_mem_free)))
+        {
+            // if a match was already found, check if this one is smaller
+            if ((found == NULL) || (found->size > node->size))
+            {
+                found = node;
+            }
+        }
+        // move to next block
+        node = node->next;
+    }
+
+    // found a free block that matches, subtract the allocation size from the
+    // free block size. If equal, the free block will be kept with 0 size... but
+    // moving it out of the linked list is too much check for little improvement.
+    found->size -= totalsize;
+
+    // compute the pointer to the beginning of the free space
+    alloc = (struct rtos_mem_used*) ((uint32_t)found + found->size);
+
+    // sanity check: allocation should always succeed
+    ASSERT(found != NULL);
+
+    // save the size of the allocated block (use low bit to indicate mem type)
+    alloc->size = totalsize;
+
+    // move to the user memory space
+    alloc++;
+
+    return (void*)alloc;
+}
+
+void rtos_free(void *pointer)
+{
+    struct rtos_mem_used *freed;
+    struct rtos_mem_free *node, *prev_node, *next_node;
+    uint32_t size;
+
+    // point to the block descriptor (before user memory so decrement)
+    freed = ((struct rtos_mem_used *)pointer) - 1;
+
+    // point to the first node of the free elements linked list
+    size = freed->size;
+    node = rtos_env.mfree;
+    prev_node = NULL;
+
+    // sanity checks
+    ASSERT(pointer != NULL);
+    ASSERT((uint32_t)pointer > (uint32_t)node);
+
+    while (node != NULL)
+    {
+        // check if the freed block is right after the current block
+        if ((uint32_t)freed == ((uint32_t)node + node->size))
+        {
+            // append the freed block to the current one
+            node->size += size;
+
+            // check if this merge made the link between free blocks
+            if ((uint32_t)node->next == ((uint32_t)node + node->size))
+            {
+                next_node = node->next;
+                // add the size of the next node to the current node
+                node->size += next_node->size;
+                // update the next of the current node
+                node->next = next_node->next;
+            }
+            goto free_end;
+        }
+        else if ((uint32_t)freed < (uint32_t)node)
+        {
+            // sanity check: can not happen before first node
+            ASSERT(prev_node != NULL);
+
+            // update the next pointer of the previous node
+            prev_node->next = (struct rtos_mem_free*)freed;
+
+            // check if the released node is right before the free block
+            if (((uint32_t)freed + size) == (uint32_t)node)
+            {
+                // merge the two nodes
+                ((struct rtos_mem_free*)freed)->next = node->next;
+                ((struct rtos_mem_free*)freed)->size = node->size + (uint32_t)node - (uint32_t)freed;
+            }
+            else
+            {
+                // insert the new node
+                ((struct rtos_mem_free*)freed)->next = node;
+                ((struct rtos_mem_free*)freed)->size = size;
+            }
+            goto free_end;
+        }
+
+        // move to the next free block node
+        prev_node = node;
+        node = node->next;
+    }
+    // if reached here, freed block is after last free block and not contiguous
+    prev_node->next = (struct rtos_mem_free*)freed;
+    ((struct rtos_mem_free*)freed)->next = NULL;
+    ((struct rtos_mem_free*)freed)->size = size;
+
+free_end:
+    return;
+}
 
 
 

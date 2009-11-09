@@ -18,10 +18,10 @@
  */
 
 
-#include "rtos.h"
-#include "proc.h"
+#include "rtos/rtos.h"
+#include "proc/proc.h"
 
-#include "Uart1.h"
+#include "common/Uart1.h"
 
 #include "reg_gpio.h"
 #include "reg_crm.h"
