@@ -195,6 +195,13 @@ InitPlatform(void)
     ennum_setf(3);
     inttype_setf(1<<3);
 
+    // clear pending interrupts from the CRM after the GPIO PD/PU configuration is stable
+    {
+        volatile uint32_t toto =0;
+        while (toto++ < 10000) ;
+    }
+    crm_status_set(0xFFFF);
+
 }
 
 
