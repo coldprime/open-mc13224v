@@ -78,7 +78,7 @@ register_files= \
 .PHONY: rtos clean install
 .SILENT: rtos clean install
 rtos: ../../build/rtos/rtos.elf
-	python ../../tools/buildimages/buildimages.py -o ../../build/rtos/image $<
+	python ../../tools/buildimages/buildimages.py -o $(dir $<)image $<
 	echo "... Finished building RTOS ..."
 
 LOADUART ?= -c 5
