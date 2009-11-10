@@ -19,96 +19,74 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <stdbool.h>
 
-#include "Uart1.h"
+#include "rtos_ac/rtos_ac.h"
+#include "common/Uart1.h"
 
 #include "reg_gpio.h"
 #include "reg_crm.h"
 
 /***************************************************************************************/
 
-
-#define WAIT(x) {volatile int z; for (z = 0; z <(x)*0x10000;z++);}
-
-/***************************************************************************************/
-
-
-#define TASK_CNT    3
-#define TASK_STACK_SIZE    4000
-
 char task_stack[TASK_CNT][TASK_STACK_SIZE];
 
-typedef void *task_entry_t(void*);
-typedef void *task_end_t(void*);
-
-void *task1(void*);
-void *task2(void*);
-void *task3(void*);
 
 
-void *task_ending_handler(void * return_value);
-
-struct task_reg_init {
-    char            *init_sp;       // R13 init value, end of stack buffer
-    task_end_t      *init_lr;       // R14 init value
-    task_entry_t    *init_pc;       // R15 init value
-};
-
-struct task_desc;
-
-struct task_msg {
-    struct task_msg     *next;
-    struct task_desc    *sender;
-    uint32_t            id;
-    uint32_t            param;
-};
-
-enum {
-    TASK_RUN = 1,
-    TASK_PROG = 2,
-};
-
-struct task_desc {
-    uint32_t                reg_save[10];   // buffer for { R4-R11, R13, R14}
-    bool                    started;
-    bool                    blocked;
-    struct task_reg_init    reg_init;
-    struct task_msg         *msg_trig;
-    struct task_msg         *msg_sleep;
-
-} task_desc_tab[TASK_CNT + 1] = {
-    { {0}, 1, {NULL,          NULL,                NULL},  NULL, NULL },
-    { {0}, 0, {task_stack[1], task_ending_handler, task1}, NULL, NULL },
-    { {0}, 0, {task_stack[2], task_ending_handler, task2}, NULL, NULL },
-    { {0}, 0, {task_stack[3], task_ending_handler, task3}, NULL, NULL },
+struct task_desc task_desc_tab[TASK_CNT + 1] = {
+    { {0}, 1, 0, {NULL,          NULL,                NULL},  NULL, NULL, NULL },
+    { {0}, 0, 0, {task_stack[1], task_ending_handler, task1}, NULL, NULL, NULL },
+    { {0}, 0, 0, {task_stack[2], task_ending_handler, task2}, NULL, NULL, NULL },
+    { {0}, 0, 0, {task_stack[3], task_ending_handler, task3}, NULL, NULL, NULL },
 };
 
 int task_current = 0;
 //struct task_desc    *task_queue = NULL;
 
-void switch_context(uint32_t *ctx_save, uint32_t *ctx_restore);
-void start_context(struct task_msg *req, uint32_t *ctx_save, struct task_reg_init *ctx_init);
+struct task_msg *context_start(struct task_msg *req, struct task_reg_init *ctx_init, uint32_t *ctx_save);
+struct task_msg *context_start2(struct task_msg *req, struct task_reg_init *ctx_init);
+struct task_msg *context_switch(struct task_msg *req, uint32_t *ctx_restore, uint32_t *ctx_save);
+struct task_msg *context_switch2(struct task_msg *req, uint32_t *ctx_restore);
 
 /***************************************************************************************/
 
 
+struct task_msg *task_malloc(uint32_t id, uint32_t param)
+{
+    struct task_msg *msg = (struct task_msg*) mem_alloc(sizeof(struct task_msg));
+    msg->next = NULL;
+    msg->sender_id = task_current;
+    msg->id = id;
+    msg->param = param;
+
+    return msg;
+}
+
 struct task_msg *task_start(struct task_msg *req, int task_id)
 {
+    ASSERT (1 <= task_id && task_id <= TASK_CNT);
+    ASSERT(!task_desc_tab[task_id].started);
+
     uint32_t * ctx_save = task_desc_tab[task_current].reg_save;
 
     task_desc_tab[task_id].started = 1;
 
     task_current = task_id;
 
-    start_context(msg,
-                  ctx_save,
-                  &task_desc_tab[task_current].reg_init);
+    return context_start(req,
+                         &task_desc_tab[task_current].reg_init,
+                         ctx_save);
 }
 
 
 
-void task_asend(struct task_msg *msg, int task_id) {
+void task_send_ind(struct task_msg *ind, int task_id) {
     // must have 1 <= task_id <= TASK_CNT
+
+    ASSERT (1 <= task_id && task_id <= TASK_CNT);
+    ASSERT(ind); // should be possible to wake up task without ind
+
+    //Uart1PutS(" - send_ind\n");
 
     //if (task_desc_tab[task_id].blocked) {
     //    // find end of msg sleep queue and add msg
@@ -117,29 +95,42 @@ void task_asend(struct task_msg *msg, int task_id) {
     //    msg_ptr->next = msg;
     //
     //} else
+    if (task_desc_tab[task_id].started)
     {
         // find end of msg queue and add msg
-        struct task_msg *msg_ptr = (struct task_msg*) &task_desc_tab[task_id].msg_trig;
+        struct task_msg *msg_ptr = (struct task_msg*) &task_desc_tab[task_id].msg_ind;
         while (msg_ptr->next) msg_ptr = msg_ptr->next;
-        msg_ptr->next = msg;
+        msg_ptr->next = ind;
+        ind->next = NULL;
 
         // if sleeping msg, add them
-        if (task_desc_tab[task_id].msg_sleep) {
-            msg->next = task_desc_tab[task_id].msg_sleep;
-            task_desc_tab[task_id].msg_sleep = NULL;
-        }
+        //if (task_desc_tab[task_id].msg_sleep) {
+        //    msg->next = task_desc_tab[task_id].msg_sleep;
+        //    task_desc_tab[task_id].msg_sleep = NULL;
+        //}
+    }
+    else
+    {
+        mem_free(ind);
     }
 
     //task_desc_tab[task_id].flag |= TASK_PROG;
 }
 
-struct task_msg *task_send(struct task_msg *req, int task_id) {
+struct task_msg *task_send_req(struct task_msg *req, int task_id) {
 
-    struct task_msg *ret;
+    ASSERT (1 <= task_id && task_id <= TASK_CNT);
 
-    task_asend(msg, task_id);
+    //Uart1PutS(" - send_req\n");
+
+    struct task_msg *msg_ptr = (struct task_msg*) &task_desc_tab[task_id].msg_req;
+    while (msg_ptr->next) msg_ptr = msg_ptr->next;
+    msg_ptr->next = req;
+    req->next = NULL;
 
     task_desc_tab[task_current].blocked = 1;
+
+    struct task_msg *ret;
 
     if (task_desc_tab[task_id].started == 0)
     {
@@ -158,176 +149,275 @@ struct task_msg *task_send(struct task_msg *req, int task_id) {
 
 
 
-void task_schedule(void)
+struct task_msg *task_schedule(void)
 {
     int task_new = task_current;
+    struct task_msg *msg = NULL;
+
     for (;;) {
         task_new++;
 
         if (task_new == TASK_CNT + 1) {
             if (task_current == 0)
-                return;
+                return NULL;
+
             task_new = 0;
             break;
         }
 
-        if (task_desc_tab[task_new].started || task_desc_tab[task_new].req_queue)
-            break;
-    }
+        if (!task_desc_tab[task_new].blocked) {
 
-    if (task_desc_tab[task_new].flag & TASK_RUN{
+            if (task_desc_tab[task_new].started) {
+                if (task_desc_tab[task_new].msg_ind) {
+                    msg = task_desc_tab[task_new].msg_ind;
+                    task_desc_tab[task_new].msg_ind = msg->next;
 
-    uint32_t * ctx_save;
-    uint32_t * ctx_restore;
+                    ASSERT(!task_desc_tab[task_new].msg_ind_proc);
+                    task_desc_tab[task_new].msg_ind_proc = msg;
 
-    ctx_save = task_desc_tab[task_current].reg_save;
+                    break;
+                }
+            } else if (task_desc_tab[task_new].msg_req) {
+                msg = task_desc_tab[task_new].msg_req;
+                task_desc_tab[task_new].msg_req = msg->next;
 
-    do {
-        task_current++;
-        if (task_current == TASK_CNT + 1)
-            task_current = 0;
-    } while (task_desc_tab[task_current].started == 0);
-
-    ctx_restore = task_desc_tab[task_current].reg_save;
-
-    switch_context(ctx_save, ctx_restore);
-}
-
-void *task_ending_handler(void * return_value)
-{
-    Uart1PutU32((uint32_t)return_value);
-    Uart1PutS("end!\n");
-
-    task_desc_tab[task_current].started = 0;
-
-    task_schedule();
-
-    return NULL;
-}
-
-/***************************************************************************************/
-/***************************************************************************************/
-/***************************************************************************************/
-
-
-/**
- * Set the basic configuration for the whole platform.  This can vary with the
- * application.
- */
-static void
-InitPlatform(void)
-{
-    // set:
-    //   - the clock frequency for the whole platform to 24MHz (divider = 0)
-    //   - JTAG security enforced off
-    //   - SPIF uses 1.8
-    //   - power source is VBATT
-    crm_sys_cntl_pack(0, 0, 1, 1, 0, 0);
-
-    // GPIOS
-    // configure the GPIOs 25-23 as output (KBI3-KBI1), connect to LED control
-    gpio_pad_dir0_set(7 << 23);
-
-    // configure the GPIO15-14 to UART1 (UART1 TX and RX)
-    gpio_func_sel0_set((0x01 << (14*2)) | (0x01 << (15*2)));
-
-    // clear the LEDs
-    gpio_data0_set(0);
-}
-
-
-
-
-void *task1(void*b)
-{
-    volatile int j;
-
-    Uart1PutS("1-");
-    Uart1PutU32((uint32_t)b);
-
-    //for (;;)
-    {
-        for (j = 0; j <0x4;j++)
-            // switch
-            task_schedule();
-    }
-    return (uint32_t)0x123;
-}
-
-void *task2(void*b)
-{
-    //volatile int i,j;
-    for (;;)
-    {
-        Uart1PutS("2-");
-        Uart1PutU32((uint32_t)b);
-        WAIT(8);
-        // switch
-        task_schedule();
-    }
-    return NULL;
-}
-
-void *task3(void*b)
-{
-    volatile int i;
-    for (i = 0; i <10; i++)
-    {
-        Uart1PutS("3-");
-        Uart1PutU32((uint32_t)b);
-        WAIT(16);
-        // switch
-        task_schedule();
-    }
-    return (uint32_t)0x465;
-}
-
-
-
-void Main(void)
-{
-    // initialize the whole platform
-    InitPlatform();
-
-    // initialize the UART1
-    Uart1Init();
-
-    // detect the NVM type
-    Uart1PutS("RTOS started: 0x");
-    Uart1PutU32(0xCAFEBABE);
-    Uart1PutS("\n");
-
-
-    //task_init();
-
-    //Uart1PutS("init done\n");
-
-    {
-        volatile int i;
-
-        task_start((uint32_t)0x123, 1);
-        task_start((uint32_t)0x456, 2);
-        task_start((uint32_t)0x789, 3);
-
-        for (;;i++) {
-            if (i%8) {
-                Uart1PutS(".");
-                WAIT(1);
-            } else {
-                WAIT(20);
+                return task_start(msg, task_new);
             }
-
-            // switch
-            task_schedule();
         }
     }
 
+    uint32_t * ctx_save = task_desc_tab[task_current].reg_save;
+    uint32_t * ctx_restore = task_desc_tab[task_new].reg_save;
 
-    while (1) ;
+    task_current = task_new;
+
+    return context_switch(msg, ctx_restore, ctx_save);
+}
+
+void task_ending_handler(void * rsp)
+{
+    //Uart1PutS(" - task end\n");
+
+    if (task_desc_tab[task_current].msg_ind_proc) {
+        mem_free(task_desc_tab[task_current].msg_ind_proc);
+        task_desc_tab[task_current].msg_ind_proc = NULL;
+    }
+
+    struct task_msg *msg = task_desc_tab[task_current].msg_req;
+    if (msg) {
+        task_desc_tab[task_current].msg_req = msg->next;
+    }
+    task_desc_tab[task_current].started = 0;
+
+    if (msg && msg->sender_id) {
+        struct task_desc *sender = task_desc_tab + msg->sender_id;
+        ASSERT(sender->blocked && sender->started);
+        sender->blocked = 0;
+
+        //Uart1PutU32((uint32_t)return_value);
+        //Uart1PutS("end!\n");
+
+        task_current = msg->sender_id;
+        context_switch2(rsp, task_desc_tab[task_current].reg_save);
+
+    } else {
+        task_schedule();
+    }
+
+    ASSERT(0);
 }
 
 
+void *task_wait(void)
+{
+    //Uart1PutS(" - task wait\n");
 
+    if (task_desc_tab[task_current].msg_ind_proc) {
+        mem_free(task_desc_tab[task_current].msg_ind_proc);
+    }
+
+    struct task_msg *msg = task_desc_tab[task_current].msg_ind;
+
+    task_desc_tab[task_current].msg_ind_proc = msg;
+
+    if (msg) {
+        task_desc_tab[task_current].msg_ind = msg->next;
+        return msg;
+    }
+
+    return task_schedule();
+}
+
+/***************************************************************************************/
+/***************************************************************************************/
+/***************************************************************************************/
+
+
+/// Free memory block delimiter structure (size must be word multiple)
+struct rtos_mem_free
+{
+    struct rtos_mem_free *next;     ///< Pointer to the next block
+    size_t size;                    ///< Size of the current block (including delimiter)
+};
+
+/// Used memory block delimiter structure (size must be word multiple)
+struct rtos_mem_used
+{
+    size_t size;                    ///< Size of the current block (including delimiter)
+};
+
+struct rtos_mem_free *mfree;
+
+//uint32_t mem_cnt = 0;
+
+
+void mem_init(void* heap_bottom, void* heap_top)
+{
+    // align address of heap bottom on word boundary
+    mfree = (struct rtos_mem_free*)heap_bottom;
+
+    // initialize the first block
+    mfree->size = (size_t)heap_top - (size_t)mfree;
+    mfree->next = NULL;
+}
+
+
+void *mem_alloc(size_t size)
+{
+    struct rtos_mem_free *node, *found;
+    struct rtos_mem_used *alloc;
+    size_t totalsize;
+
+    // initialize the pointers
+    found = NULL;
+
+    // compute total block size: requested size PLUS used descriptor size
+    totalsize = ((size + 3) & (~3)) + sizeof(struct rtos_mem_used);
+
+    // sanity check: the totalsize should be large enough to hold free block descriptor
+    ASSERT(totalsize >= sizeof(struct rtos_mem_free));
+
+    // point to the first free block in the memory
+    node = mfree;
+
+    // go through free memory blocks list
+    while (node != NULL)
+    {
+        // check if there is enough room in this free block
+        if (node->size >= (totalsize + sizeof(struct rtos_mem_free)))
+        {
+            // if a match was already found, check if this one is smaller
+            if ((found == NULL) || (found->size > node->size))
+            {
+                found = node;
+            }
+        }
+        // move to next block
+        node = node->next;
+    }
+
+    // found a free block that matches, subtract the allocation size from the
+    // free block size. If equal, the free block will be kept with 0 size... but
+    // moving it out of the linked list is too much check for little improvement.
+    found->size -= totalsize;
+
+    // compute the pointer to the beginning of the free space
+    alloc = (struct rtos_mem_used*) ((uint32_t)found + found->size);
+
+    // sanity check: allocation should always succeed
+    ASSERT(found != NULL);
+
+    // save the size of the allocated block (use low bit to indicate mem type)
+    alloc->size = totalsize;
+
+    // move to the user memory space
+    alloc++;
+
+    //Uart1PutS(" - mem alloc ");
+    //Uart1PutU32(++mem_cnt);
+    //Uart1PutS("\n");
+
+    return (void*)alloc;
+}
+
+void mem_free(void *pointer)
+{
+    struct rtos_mem_used *freed;
+    struct rtos_mem_free *node, *prev_node, *next_node;
+    uint32_t size;
+
+    // point to the block descriptor (before user memory so decrement)
+    freed = ((struct rtos_mem_used *)pointer) - 1;
+
+    // point to the first node of the free elements linked list
+    size = freed->size;
+    node = mfree;
+    prev_node = NULL;
+
+    // sanity checks
+    ASSERT(pointer != NULL);
+    ASSERT((uint32_t)pointer > (uint32_t)node);
+
+    while (node != NULL)
+    {
+        // check if the freed block is right after the current block
+        if ((uint32_t)freed == ((uint32_t)node + node->size))
+        {
+            // append the freed block to the current one
+            node->size += size;
+
+            // check if this merge made the link between free blocks
+            if ((uint32_t)node->next == ((uint32_t)node + node->size))
+            {
+                next_node = node->next;
+                // add the size of the next node to the current node
+                node->size += next_node->size;
+                // update the next of the current node
+                node->next = next_node->next;
+            }
+            goto free_end;
+        }
+        else if ((uint32_t)freed < (uint32_t)node)
+        {
+            // sanity check: can not happen before first node
+            ASSERT(prev_node != NULL);
+
+            // update the next pointer of the previous node
+            prev_node->next = (struct rtos_mem_free*)freed;
+
+            // check if the released node is right before the free block
+            if (((uint32_t)freed + size) == (uint32_t)node)
+            {
+                // merge the two nodes
+                ((struct rtos_mem_free*)freed)->next = node->next;
+                ((struct rtos_mem_free*)freed)->size = node->size + (uint32_t)node - (uint32_t)freed;
+            }
+            else
+            {
+                // insert the new node
+                ((struct rtos_mem_free*)freed)->next = node;
+                ((struct rtos_mem_free*)freed)->size = size;
+            }
+            goto free_end;
+        }
+
+        // move to the next free block node
+        prev_node = node;
+        node = node->next;
+    }
+    // if reached here, freed block is after last free block and not contiguous
+    prev_node->next = (struct rtos_mem_free*)freed;
+    ((struct rtos_mem_free*)freed)->next = NULL;
+    ((struct rtos_mem_free*)freed)->size = size;
+
+free_end:
+
+    //Uart1PutS(" - mem free ");
+    //Uart1PutU32(--mem_cnt);
+    //Uart1PutS("\n");
+
+    return;
+}
 
 
 

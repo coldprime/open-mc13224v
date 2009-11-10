@@ -5,7 +5,8 @@ REG = python ../../tools/reg_xls2h/reg_xls2h.py
 
 # build tool options
 CC_FLAGS= -O3 -g3 -Wall -fno-common -msoft-float \
-          -mcpu=arm7tdmi-s -march=armv4t -mtune=arm7tdmi-s
+          -mcpu=arm7tdmi-s -march=armv4t -mtune=arm7tdmi-s \
+          -std=c99
 LD_FLAGS= -nostdlib
 
 CC_INC= \
@@ -45,13 +46,24 @@ default: rtos install
 	mkdir -p $(dir $@)
 	$(REG) --short $< "UART2_" 0x8000B000 $@
 
+
 # list of the objects needed to link RTOS
+ifneq ($(AC), 1)
 rtos_objects= \
 	../../build/rtos/obj/boot/Init-RAMonly.o \
 	../../build/rtos/obj/common/Uart1.o \
 	../../build/rtos/obj/rtos/rtos_asm.o \
 	../../build/rtos/obj/rtos/rtos.o \
 	../../build/rtos/obj/app/rtos_test.o
+else
+rtos_objects= \
+	../../build/rtos/obj/boot/Init-RAMonly.o \
+	../../build/rtos/obj/common/Uart1.o \
+	../../build/rtos/obj/rtos_ac/switch.o \
+	../../build/rtos/obj/rtos_ac/rtos_ac.o \
+	../../build/rtos/obj/rtos_ac/test.o
+
+endif
 
 # list of the generated register
 register_files= \

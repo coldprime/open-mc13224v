@@ -23,8 +23,15 @@
 #error "File only included with ARM GCC"
 #endif
 
-/// define the assertion check
-#define ASSERT(__c) while (!(__c)) ;
+/// define the assertion check (in an extreme space optimized way)
+#define ASSERT(__c) {                               \
+    if (!(__c)) {                                   \
+        Uart1PutS("\n\nASSERT " __FILE__ " ");      \
+        Uart1PutU16(__LINE__);                      \
+        Uart1PutS(": <" #__c ">\n\n");              \
+        for(;;);                                    \
+    }                                               \
+}
 
 /// define the force inlining attribute for this compiler
 #define __INLINE static __attribute__((__always_inline__)) inline

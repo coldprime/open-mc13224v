@@ -3,17 +3,21 @@
 
 .text
     .align  4
-    .global switch_context
-    .type   switch_context, function
+    .global context_switch
+    .type   context_switch, function
+    .global context_switch2
+    .type   context_switch2, function
 
-/*  r0 : pointer to context of current task, to save registers
-    r1 : pointer to context of new task, to update registers
+/*  r0 : pointer to custom parameter
+    r1 : pointer to init context of new task, which contains :
+    r2 : pointer to context of current task, to save registers
 */
-switch_context:
+context_switch:
 
     /* save current registers in old context pointed by r0 */
-    stmia   r0, {r4-r11, r13, r14}
+    stmia   r2, {r4-r11, r13, r14}
 
+context_switch2:
     /* restore registers with new context pointed by r1 */
     ldmia   r1, {r4-r11, r13, r14}
 
@@ -24,24 +28,27 @@ switch_context:
 
 
 /*  r0 : pointer to custom parameter
-    r1 : pointer to context of current task, to save registers
-    r2 : pointer to init context of new task, which contains :
+    r1 : pointer to init context of new task, which contains :
         - sp: pointer to end of task stack
         - lr: pointer to ending routine
         - pc: pointer to entry routine
+    r2 : pointer to context of current task, to save registers
 */
     .align  4
-    .global start_context
-    .type   start_context, function
+    .global context_start
+    .type   context_start, function
+    .global context_start2
+    .type   context_start2, function
 
-start_context:
+context_start:
     /* save current registers in old context pointed by r1 */
-    stmia   r1, {r4-r11, r13, r14}
+    stmia   r2, {r4-r11, r13, r14}
 
+context_start2:
     /* update registers with new context pointed by r2.
        will jump to entry routine with r0 pointer to custom parameter.
        beware of thumb mode!  */
-    ldmia   r2, {r13, r14, r15}
+    ldmia   r1, {r13, r14, r15}
 
 
 
