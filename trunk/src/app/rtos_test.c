@@ -34,6 +34,18 @@ extern char stack_base_svc;
 extern char heap_bottom;
 extern char heap_top;
 
+enum
+{
+    PB0_IND = 0,
+    PB0_RSP,
+    PB0_REQ,
+    PB0_CFM,
+    PB1_IND = 0x100,
+    PB1_RSP,
+    PB1_REQ,
+    PB1_CFM,
+};
+
 __FIQ void FiqHandler(void)
 {
     uint8_t fiq;
@@ -83,12 +95,18 @@ void event_pb0(void)
 {
     Uart1PutS("EVT_PB0\n");
 
+    // send an indication to the thread0
+    rtos_msg_post(RTOS_T_THREAD0, PB0_IND, 0);
+
     rtos_eventclear(RTOS_EVENT(PB0));
 }
 
 void event_pb1(void)
 {
     Uart1PutS("EVT_PB1\n");
+
+    // send an indication to the thread1
+    rtos_msg_post(RTOS_T_THREAD1, PB1_IND, 0);
 
     rtos_eventclear(RTOS_EVENT(PB1));
 }
@@ -109,41 +127,102 @@ void event_pb3(void)
 
 void Thread0(void)
 {
-    uint32_t cnt = 0;
-
     Uart1PutS("Thread0 started\n");
     while (1)
     {
-        // raise signal 2
-//        rtos_sigraise(2);
+        void *msg;
+        uint8_t src;
+        uint16_t id;
 
-        // wait for signal 1
-        rtos_sigwait(1);
+        // restore all saved messages
+        rtos_msg_restore();
 
-        Uart1PutS("T0:");
-        Uart1PutU32(cnt);
-        Uart1PutS("\n");
-        cnt++;
+        // wait for the next incoming message
+        msg = rtos_msg_get(&src, &id);
+
+        switch (id)
+        {
+        case PB0_IND:
+            Uart1PutS("Thread0: rx PB0_IND\n");
+
+            // handle the message content
+            rtos_msg_free(msg);
+
+            // send message to Thread1
+            rtos_msg_post(RTOS_T_THREAD1, PB1_REQ, 0);
+
+            // wait for the response message
+            do
+            {
+                msg = rtos_msg_get(&src, &id);
+
+                if (id != PB1_CFM)
+                {
+                    rtos_msg_store(msg);
+                }
+            } while (id != PB1_CFM);
+
+            Uart1PutS("Thread0: rx PB1_CFM\n");
+            // handle the message content
+            rtos_msg_free(msg);
+
+            break;
+        default:
+            Uart1PutS("Thread0: unknown message received\n");
+            break;
+        }
     }
 }
 
 void Thread1(void)
 {
-    uint32_t cnt = 0xFFFFFFFF;
-
     Uart1PutS("Thread1 started\n");
     while (1)
     {
-        // raise signal 1
-//        rtos_sigraise(1);
+        void *msg;
+        uint8_t src;
+        uint16_t id;
 
-        // wait for signal 2
-        rtos_sigwait(2);
+        // restore all saved messages
+        rtos_msg_restore();
 
-        Uart1PutS("T1:");
-        Uart1PutU32(cnt);
-        Uart1PutS("\n");
-        cnt--;
+        // wait for the next incoming message
+        msg = rtos_msg_get(&src, &id);
+
+        switch (id)
+        {
+        case PB1_REQ:
+        {
+            uint8_t sender = src;
+
+            Uart1PutS("Thread1: rx PB1_REQ\n");
+            // handle the message content
+            rtos_msg_free(msg);
+
+            // wait for an indication from the PB1
+            do
+            {
+                msg = rtos_msg_get(&src, &id);
+
+                if (id != PB1_IND)
+                {
+                    rtos_msg_store(msg);
+                }
+            } while (id != PB1_IND);
+
+            Uart1PutS("Thread1: rx PB1_IND\n");
+            // handle the message content
+            rtos_msg_free(msg);
+
+            // send message to the sender of the request
+            rtos_msg_post(sender, PB1_CFM, 0);
+
+            break;
+        }
+        default:
+            Uart1PutS("Thread1: unknown message received\n");
+            break;
+        }
     }
 }
 

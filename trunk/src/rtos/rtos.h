@@ -49,6 +49,12 @@ enum
     RTOS_T_THREAD1
 };
 
+/// Definition of the signals in the system
+enum
+{
+    RTOS_S_MSG = (1 << 31),
+};
+
 /// Thread descriptor for the RTOS initialization
 struct thread_d
 {
@@ -57,17 +63,6 @@ struct thread_d
 
     /// Thread stack base (first word above the allocated stack space)
     uint32_t *stack;
-};
-
-struct rtos_msg
-{
-    /// Pointer to the next message in the queue
-    struct rtos_msg *next;
-
-    /// Bitfield of the configuration flags of the message
-    uint32_t flags;
-
-
 };
 
 /// Thread context from the RTOS point of view
@@ -79,7 +74,8 @@ struct thread_c
     /// Head of the saved messages for the thread
     struct rtos_msg* saved;
 
-    /// Mask of the signals on which the thread is currently waiting
+    /// Mask of the signals on which the thread is currently waiting (bit 31 is reserved
+    /// for the messages to the thread)
     uint32_t sigmask;
 
     /// Thread stack pointer location for storage when thread is pending on signals
@@ -126,8 +122,8 @@ extern void rtos_create(uint32_t *sp_save, void(*fn)(void), uint32_t const *stac
 /**
  * Initialize the RTOS
  *
- * @param heap_bottom Pointer to first word in the heap (must be word aligned)
- * @param heap_top Pointer to last word lower or equal to end of heap
+ * @param[in] heap_bottom Pointer to first word in the heap (must be word aligned)
+ * @param[in] heap_top Pointer to last word lower or equal to end of heap
  */
 extern void rtos_init(void* heap_bottom, void* heap_top);
 
@@ -144,7 +140,7 @@ extern void rtos_scheduler(uint32_t const *stack);
 extern void rtos_sigwait(uint32_t sigmask);
 
 /**
- * Raise signals, this will release threads pending on anyone of these signals
+ * Raise signals, this will release all threads pending on any of these signals
  * @param[in] sigmask Mask of the signals to raise
  */
 extern void rtos_sigraise(uint32_t sigmask);
@@ -162,19 +158,55 @@ extern void rtos_eventraise(uint32_t eventmask);
 extern void rtos_eventclear(uint32_t eventmask);
 
 /**
- * Memory allocator specific to the RTOS
- *
- * @param size Amount of memory requested
+ * Memory allocator
+ * @param[in] size Amount of memory requested
+ * @return Pointer to the allocated memory, NULL if allocation failed
  */
 extern void *rtos_malloc(size_t size);
 
 /**
  * Free an allocated block
- *
- * @param pointer Pointer to the allocated block to free
+ * @param[in] pointer Pointer to the allocated block to free
  */
 extern void rtos_free(void *pointer);
 
+/**
+ * Post an RTOS message
+ *
+ * This function is called before the message is actually filled by the user and this is
+ * not a bug.  Since the current thread will only lose focus when it will wait for a
+ * message, it has exclusive ownership of the message content until then.
+ * @param[in] dest Destination thread
+ * @param[in] id Message ID
+ * @param[in] size Size of the required user space in the message
+ * @return Pointer to the message user content, can not fail otherwise asserts
+ */
+extern void *rtos_msg_post(uint8_t dest, uint16_t id, size_t size);
 
+/**
+ * Wait the next RTOS message for the current thread
+ * @param[out] src Source thread
+ * @param[out] id Message ID
+ * @return Pointer to the message user content, NULL if there was no pending message
+ */
+extern void *rtos_msg_get(uint8_t *src, uint16_t *id);
+
+/**
+ * Store a message in the saved messages list of the thread
+ * @param[in] pointer Pointer to the user content of the message to store in the save list
+ * for later processing
+ */
+extern void rtos_msg_store(void *pointer);
+
+/**
+ * Restore the messages from the save list of the thread
+ */
+extern void rtos_msg_restore(void);
+
+/**
+ * Free an RTOS message
+ * @param[in] pointer Pointer to the user content of the message to free
+ */
+extern void rtos_msg_free(void *pointer);
 
 #endif // _RTOS_H_

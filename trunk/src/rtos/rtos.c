@@ -42,6 +42,18 @@ struct rtos_mem_used
     size_t size;                    ///< Size of the current block (including delimiter)
 };
 
+/// Message structure (size must be word multiple)
+struct rtos_msg
+{
+    /// Sender thread
+    uint8_t sender;
+
+    /// Message id
+    uint16_t id;
+
+    /// Pointer to the next message in the list
+    struct rtos_msg *next;
+};
 
 
 // define event handlers
@@ -96,6 +108,7 @@ static void schedule_threads(void)
 
             // switch between the current task and the new one to schedule
             rtos_switch(&rtos_env.threads[i].sp, &rtos_env.sp);
+
         }
     }
 }
@@ -104,8 +117,8 @@ void rtos_init(void* heap_bottom, void* heap_top)
 {
     int i;
 
-    // initialize the event pending
-    rtos_env.eventmask = 0;
+    // initialize the pending events with a thread for the thread creation
+    rtos_env.eventmask = RTOS_EVENT(THREADS);
     // save the thread contexts array
     rtos_env.threads = thread_contexts;
 
@@ -117,7 +130,7 @@ void rtos_init(void* heap_bottom, void* heap_top)
         rtos_env.threads[i].saved = NULL;
         rtos_env.threads[i].sp = 0;
 
-        // by default there is no pending mask
+        // by default the threads are not pending on any signal
         rtos_env.threads[i].sigmask = 0;
         rtos_create(&rtos_env.threads[i].sp, threads[i].fn, threads[i].stack);
     }
@@ -330,5 +343,105 @@ free_end:
     return;
 }
 
+void *rtos_msg_post(uint8_t dest, uint16_t id, size_t size)
+{
+    struct rtos_msg *msg;
+    struct rtos_msg **pnode;
 
+    // allocate a message
+    msg = rtos_malloc(sizeof(struct rtos_msg) + size);
 
+    // sanity check
+    ASSERT(msg != NULL);
+
+    // fill message
+    msg->id = id;
+    msg->sender = rtos_env.thread_cur;
+    msg->next = NULL;
+
+    // find the end of the pending message list
+    pnode = &(rtos_env.threads[dest].pending);
+    while (*pnode != NULL)
+    {
+        pnode = &((*pnode)->next);
+    }
+    *pnode = msg;
+
+    // clear the bit indicating that the thread is waiting for a message
+    rtos_env.threads[dest].sigmask &= ~(RTOS_S_MSG);
+
+    // raise an event indicating that there was a pending message
+    rtos_eventraise(RTOS_EVENT(THREADS));
+
+    return &(msg[1]);
+}
+
+void *rtos_msg_get(uint8_t *src, uint16_t *id)
+{
+    struct rtos_msg *msg;
+
+    if (rtos_env.threads[rtos_env.thread_cur].pending == NULL)
+    {
+        rtos_sigwait(RTOS_S_MSG);
+    }
+
+    // sanity check: make sure there was a message added
+    ASSERT(rtos_env.threads[rtos_env.thread_cur].pending != NULL);
+
+    // retrieve the next pending message
+    msg = rtos_env.threads[rtos_env.thread_cur].pending;
+
+    // update pending message list
+    rtos_env.threads[rtos_env.thread_cur].pending = msg->next;
+
+    // update the information about the received message
+    *src = msg->sender;
+    *id = msg->id;
+
+    return &(msg[1]);
+
+}
+
+void rtos_msg_store(void *pointer)
+{
+    struct rtos_msg *msg;
+    struct rtos_msg **pnode;
+
+    // move pointer back to the RTOS message
+    msg = ((struct rtos_msg *)pointer)-1;
+    msg->next = NULL;
+
+    // find the end of the saved messages list
+    pnode = &(rtos_env.threads[rtos_env.thread_cur].saved);
+    while (*pnode != NULL)
+    {
+        pnode = &((*pnode)->next);
+    }
+    *pnode = msg;
+}
+
+void rtos_msg_restore(void)
+{
+    struct rtos_msg **pnode;
+
+    // find the end of the pending message list
+    pnode = &(rtos_env.threads[rtos_env.thread_cur].saved);
+    while (*pnode != NULL)
+    {
+        pnode = &((*pnode)->next);
+    }
+    *pnode = rtos_env.threads[rtos_env.thread_cur].pending;
+    rtos_env.threads[rtos_env.thread_cur].pending = rtos_env.threads[rtos_env.thread_cur].saved;
+    rtos_env.threads[rtos_env.thread_cur].saved = NULL;
+}
+
+void rtos_msg_free(void *pointer)
+{
+    struct rtos_msg *msg;
+
+    // move pointer back to the RTOS message
+    msg = ((struct rtos_msg *)pointer)-1;
+
+    // free the message
+    rtos_free(msg);
+}
