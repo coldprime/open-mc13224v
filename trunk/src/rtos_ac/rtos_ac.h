@@ -34,45 +34,48 @@
 /***************************************************************************************/
 
 
-#define TASK_CNT    3
-#define TASK_STACK_SIZE    4000
+#define TASK_CNT    3               // Number of task, 0 not included
+#define TASK_STACK_SIZE    4000     // stack size for each task except 0
 
-extern char task_stack[TASK_CNT][TASK_STACK_SIZE];
-//int task_current = 0;
+extern char task_stack[TASK_CNT][TASK_STACK_SIZE];  // task stacks
 
-
+// task message; can be a request (synchronous) or an indication (async)
 struct task_msg {
-    struct task_msg     *next;
-    uint32_t            sender_id;
-    uint32_t            id;
-    uint32_t            param;
+    struct task_msg     *next;      // ptr to next msg if in a queue
+    uint32_t            sender_id;  // calling task (can be 0 if task does not want cfm)
+    uint32_t            id;         // user value
+    uint32_t            param;      // user value
 };
 
+// entering function of a task
 typedef struct task_msg *task_entry_t(struct task_msg *);
-typedef void task_end_t(void*);
-
+// actual entering functions
 struct task_msg *task1(struct task_msg *);
 struct task_msg *task2(struct task_msg *);
 struct task_msg *task3(struct task_msg *);
 
+// terminating handler of a task
+typedef void task_end_t(void*);
+// actual terminating handler
 void task_ending_handler(void * rsp);
-struct task_msg *task_schedule(void);
 
+
+// initial value for registers when starting a task
 struct task_reg_init {
     char            *init_sp;       // R13 init value, end of stack buffer
     task_end_t      *init_lr;       // R14 init value
     task_entry_t    *init_pc;       // R15 init value
 };
 
-
+// task environment
 struct task_desc {
     uint32_t                reg_save[10];   // buffer for { R4-R11, R13, R14}
-    bool                    started;
-    bool                    blocked;
-    struct task_reg_init    reg_init;
-    struct task_msg         *msg_req;
-    struct task_msg         *msg_ind;
-    struct task_msg         *msg_ind_proc;
+    bool                    started;        // task is running, waiting, blocked
+    bool                    blocked;        // sync msg sent to another task
+    struct task_reg_init    reg_init;       // inital registers value
+    struct task_msg         *msg_req;       // request queue; msg are removed at the end of the task
+    struct task_msg         *msg_ind;       // indication queue; msg a removed before processing
+    struct task_msg         *msg_ind_proc;  // processed indication is moved here temporarly
 };
 
 struct task_msg *context_start(struct task_msg *req, struct task_reg_init *ctx_init, uint32_t *ctx_save);

@@ -51,6 +51,9 @@ struct task_msg *context_switch2(struct task_msg *req, uint32_t *ctx_restore);
 /***************************************************************************************/
 
 
+// Allocate a message and fill it with given parameters.
+// Just an handy function for testing purpose
+
 struct task_msg *task_malloc(uint32_t id, uint32_t param)
 {
     struct task_msg *msg = (struct task_msg*) mem_alloc(sizeof(struct task_msg));
@@ -61,6 +64,20 @@ struct task_msg *task_malloc(uint32_t id, uint32_t param)
 
     return msg;
 }
+
+
+// Start a new task. The context will be switched to the new task
+// which must not be already started.
+//
+// Depending of the blocked state of the calling task, this call can
+// be asynchrounous or not:
+// - if not blocked , the calling task will be resumed in a subsequent
+//   schedule, even if the new task did not finish yet, and with a
+//   dummy return value;
+// - otherwise, calling task will only resume when the target task
+//   finishes, with a relevant return value.
+//
+// Message request is optional in asynchrounous mode (not blocked).
 
 struct task_msg *task_start(struct task_msg *req, int task_id)
 {
@@ -74,60 +91,53 @@ struct task_msg *task_start(struct task_msg *req, int task_id)
     task_current = task_id;
 
     return context_start(req,
-                         &task_desc_tab[task_current].reg_init,
-                         ctx_save);
+                        &task_desc_tab[task_id].reg_init,
+                        ctx_save);
 }
 
 
+// Send an asynchrounous message indication to a task.
+// The message is just added to the list and the function return.
+// (note: it would be possible to switch to the target task)
+// If the task is not started, the indication is discarded.
 
 void task_send_ind(struct task_msg *ind, int task_id) {
-    // must have 1 <= task_id <= TASK_CNT
 
     ASSERT (1 <= task_id && task_id <= TASK_CNT);
     ASSERT(ind); // should be possible to wake up task without ind
 
-    //Uart1PutS(" - send_ind\n");
-
-    //if (task_desc_tab[task_id].blocked) {
-    //    // find end of msg sleep queue and add msg
-    //    struct task_msg *msg_ptr = (struct task_msg*) &task_desc_tab[task_id].msg_sleep;
-    //    while (msg_ptr->next) msg_ptr = msg_ptr->next;
-    //    msg_ptr->next = msg;
-    //
-    //} else
-    if (task_desc_tab[task_id].started)
-    {
-        // find end of msg queue and add msg
+    if (task_desc_tab[task_id].started) {
+        // find end of indication queue and add msg
         struct task_msg *msg_ptr = (struct task_msg*) &task_desc_tab[task_id].msg_ind;
         while (msg_ptr->next) msg_ptr = msg_ptr->next;
         msg_ptr->next = ind;
         ind->next = NULL;
 
-        // if sleeping msg, add them
-        //if (task_desc_tab[task_id].msg_sleep) {
-        //    msg->next = task_desc_tab[task_id].msg_sleep;
-        //    task_desc_tab[task_id].msg_sleep = NULL;
-        //}
-    }
-    else
-    {
+    } else {
+        // discard message
         mem_free(ind);
     }
-
-    //task_desc_tab[task_id].flag |= TASK_PROG;
 }
+
+
+// Send an asynchrounous message indication to a task.
+// The message is just added to the list and switch will occurs
+// during a subsequent schedule.
+// (note: it would be possible to switch to the target task)
+// If the task is not started, the indication is discarded.
 
 struct task_msg *task_send_req(struct task_msg *req, int task_id) {
 
-    ASSERT (1 <= task_id && task_id <= TASK_CNT);
+    ASSERT(1 <= task_id && task_id <= TASK_CNT);
+    ASSERT(!task_desc_tab[task_current].blocked);
 
-    //Uart1PutS(" - send_req\n");
-
+    // find end of request queue and add msg
     struct task_msg *msg_ptr = (struct task_msg*) &task_desc_tab[task_id].msg_req;
     while (msg_ptr->next) msg_ptr = msg_ptr->next;
     msg_ptr->next = req;
     req->next = NULL;
 
+    // block current task, it will only resume when target task returns
     task_desc_tab[task_current].blocked = 1;
 
     struct task_msg *ret;
@@ -149,15 +159,25 @@ struct task_msg *task_send_req(struct task_msg *req, int task_id) {
 
 
 
+// Switch to another task. The task list is scanned for a task
+// that match any of these conditions:
+// - task id is 0 (special task which cannot be paused or blocked)
+// - task is not blocked, is started, has a pending indication
+// - task is not blocked, not stated, has a pending request.
+// Context is then switched to the selected task.
+
 struct task_msg *task_schedule(void)
 {
     int task_new = task_current;
     struct task_msg *msg = NULL;
 
     for (;;) {
+        // scan next task in the list
         task_new++;
 
         if (task_new == TASK_CNT + 1) {
+            // end of list. If task 0 is the calling function, just
+            // return, otherwise select it for the context switch
             if (task_current == 0)
                 return NULL;
 
@@ -169,23 +189,30 @@ struct task_msg *task_schedule(void)
 
             if (task_desc_tab[task_new].started) {
                 if (task_desc_tab[task_new].msg_ind) {
+                    // task started and indication pending:
+                    // remove indication from the list...
                     msg = task_desc_tab[task_new].msg_ind;
                     task_desc_tab[task_new].msg_ind = msg->next;
 
+                    // ...and save it for subsequent free
                     ASSERT(!task_desc_tab[task_new].msg_ind_proc);
                     task_desc_tab[task_new].msg_ind_proc = msg;
 
+                    // task is selected for scheduling
                     break;
                 }
             } else if (task_desc_tab[task_new].msg_req) {
+                // task not started and request pending:
                 msg = task_desc_tab[task_new].msg_req;
                 task_desc_tab[task_new].msg_req = msg->next;
 
+                // start the task
                 return task_start(msg, task_new);
             }
         }
     }
 
+    // prepare contexts and switch to the selected task
     uint32_t * ctx_save = task_desc_tab[task_current].reg_save;
     uint32_t * ctx_restore = task_desc_tab[task_new].reg_save;
 
@@ -194,53 +221,73 @@ struct task_msg *task_schedule(void)
     return context_switch(msg, ctx_restore, ctx_save);
 }
 
+
+// This function is never called explicitly, but only when a task
+// returns.
+// If the call was synchronous, it switches back the calling task,
+// otherwise any pending task is scheduled.
+
 void task_ending_handler(void * rsp)
 {
-    //Uart1PutS(" - task end\n");
-
+    // free last processed indication if any
     if (task_desc_tab[task_current].msg_ind_proc) {
         mem_free(task_desc_tab[task_current].msg_ind_proc);
         task_desc_tab[task_current].msg_ind_proc = NULL;
     }
 
-    struct task_msg *msg = task_desc_tab[task_current].msg_req;
-    if (msg) {
-        task_desc_tab[task_current].msg_req = msg->next;
-    }
+    // modify task state
     task_desc_tab[task_current].started = 0;
 
-    if (msg && msg->sender_id) {
-        struct task_desc *sender = task_desc_tab + msg->sender_id;
-        ASSERT(sender->blocked && sender->started);
-        sender->blocked = 0;
 
-        //Uart1PutU32((uint32_t)return_value);
-        //Uart1PutS("end!\n");
+    // check if the task was started with a request
+    struct task_msg *msg = task_desc_tab[task_current].msg_req;
 
-        task_current = msg->sender_id;
-        context_switch2(rsp, task_desc_tab[task_current].reg_save);
+    if (msg) {
+        // then remove it from the list but without freeing it
+        // (it is the duty of the calling task)
+        task_desc_tab[task_current].msg_req = msg->next;
 
-    } else {
-        task_schedule();
+        if (msg->sender_id) {
+            // if the calling task is indicated, it is a synchrounous
+            // request and context must be switched back to the caller
+            struct task_desc *sender = task_desc_tab + msg->sender_id;
+            ASSERT(sender->blocked && sender->started);
+            sender->blocked = 0;
+
+            task_current = msg->sender_id;
+            context_switch2(rsp, task_desc_tab[task_current].reg_save);
+
+            // we should never arrive here!
+            ASSERT(0);
+        }
+
     }
 
+    task_schedule();
+
+    // we should never arrive here!
     ASSERT(0);
 }
 
 
+// Wait for an indication. If indication queue is not empty, returns
+// directly the next one, otherwise schedule any other task until
+// a new indication is received.
+
 void *task_wait(void)
 {
-    //Uart1PutS(" - task wait\n");
-
+    // free last processed indication if any
     if (task_desc_tab[task_current].msg_ind_proc) {
         mem_free(task_desc_tab[task_current].msg_ind_proc);
     }
 
     struct task_msg *msg = task_desc_tab[task_current].msg_ind;
 
+    // update last processed indication with new one or NULL
     task_desc_tab[task_current].msg_ind_proc = msg;
 
     if (msg) {
+        // remove new indication from the list and return it to the task
         task_desc_tab[task_current].msg_ind = msg->next;
         return msg;
     }
@@ -256,19 +303,22 @@ void *task_wait(void)
 /// Free memory block delimiter structure (size must be word multiple)
 struct rtos_mem_free
 {
-    struct rtos_mem_free *next;     ///< Pointer to the next block
-    size_t size;                    ///< Size of the current block (including delimiter)
+    struct rtos_mem_free    *next;  ///< Pointer to the next block
+    uint32_t                magic;
+    size_t                  size;   ///< Size of the current block (including delimiter)
 };
 
 /// Used memory block delimiter structure (size must be word multiple)
 struct rtos_mem_used
 {
-    size_t size;                    ///< Size of the current block (including delimiter)
+    uint32_t    magic;
+    size_t      size;               ///< Size of the current block (including delimiter)
 };
 
-struct rtos_mem_free *mfree;
+#define MAGIC_FREE  0x46524545
+#define MAGIC_USED  0x55534544
 
-//uint32_t mem_cnt = 0;
+struct rtos_mem_free *mfree;
 
 
 void mem_init(void* heap_bottom, void* heap_top)
@@ -278,6 +328,7 @@ void mem_init(void* heap_bottom, void* heap_top)
 
     // initialize the first block
     mfree->size = (size_t)heap_top - (size_t)mfree;
+    mfree->magic = MAGIC_FREE;
     mfree->next = NULL;
 }
 
@@ -303,6 +354,7 @@ void *mem_alloc(size_t size)
     // go through free memory blocks list
     while (node != NULL)
     {
+        ASSERT(node->magic == MAGIC_FREE);
         // check if there is enough room in this free block
         if (node->size >= (totalsize + sizeof(struct rtos_mem_free)))
         {
@@ -329,6 +381,7 @@ void *mem_alloc(size_t size)
 
     // save the size of the allocated block (use low bit to indicate mem type)
     alloc->size = totalsize;
+    alloc->magic = MAGIC_USED;
 
     // move to the user memory space
     alloc++;
@@ -348,6 +401,8 @@ void mem_free(void *pointer)
 
     // point to the block descriptor (before user memory so decrement)
     freed = ((struct rtos_mem_used *)pointer) - 1;
+
+    ASSERT(freed->magic == MAGIC_USED);
 
     // point to the first node of the free elements linked list
     size = freed->size;
@@ -384,6 +439,7 @@ void mem_free(void *pointer)
 
             // update the next pointer of the previous node
             prev_node->next = (struct rtos_mem_free*)freed;
+            ((struct rtos_mem_free*)freed)->magic = MAGIC_FREE;
 
             // check if the released node is right before the free block
             if (((uint32_t)freed + size) == (uint32_t)node)
@@ -409,6 +465,7 @@ void mem_free(void *pointer)
     prev_node->next = (struct rtos_mem_free*)freed;
     ((struct rtos_mem_free*)freed)->next = NULL;
     ((struct rtos_mem_free*)freed)->size = size;
+    ((struct rtos_mem_free*)freed)->magic = MAGIC_FREE;
 
 free_end:
 
