@@ -42,7 +42,7 @@ extern char task_stack[TASK_CNT][TASK_STACK_SIZE];  // task stacks
 // task message; can be a request (synchronous) or an indication (async)
 struct task_msg {
     struct task_msg     *next;      // ptr to next msg if in a queue
-    uint32_t            sender_id;  // calling task (can be 0 if task does not want cfm)
+    struct task_desc    *calling;   // calling task (can be 0 if task does not want cfm)
     uint32_t            id;         // user value
     uint32_t            param;      // user value
 };
@@ -70,12 +70,13 @@ struct task_reg_init {
 // task environment
 struct task_desc {
     uint32_t                reg_save[10];   // buffer for { R4-R11, R13, R14}
-    bool                    started;        // task is running, waiting, blocked
-    bool                    blocked;        // sync msg sent to another task
     struct task_reg_init    reg_init;       // inital registers value
-    struct task_msg         *msg_req;       // request queue; msg are removed at the end of the task
-    struct task_msg         *msg_ind;       // indication queue; msg a removed before processing
-    struct task_msg         *msg_ind_proc;  // processed indication is moved here temporarly
+    uint8_t                 started;        // task is running, waiting, blocked
+    uint8_t                 blocked;        // sync msg sent to another task
+    struct task_desc        *calling;
+    struct task_msg         *req_queue;       // request queue; msg are removed at the end of the task
+    struct task_msg         *ind_queue;       // indication queue; msg a removed before processing
+    //struct task_msg         *msg_ind_proc;  // processed indication is moved here temporarly
 };
 
 struct task_msg *context_start(struct task_msg *req, struct task_reg_init *ctx_init, uint32_t *ctx_save);
@@ -86,11 +87,14 @@ struct task_msg *context_switch2(struct task_msg *req, uint32_t *ctx_restore);
 /***************************************************************************************/
 
 
+
+
 struct task_msg *task_malloc(uint32_t id, uint32_t param);
-struct task_msg *task_start(struct task_msg *req, int task_id);
+struct task_msg *task_schedule(void);
+void task_asynch(int task_id);
+
 void task_send_ind(struct task_msg *ind, int task_id);
 struct task_msg *task_send_req(struct task_msg *req, int task_id);
-struct task_msg *task_schedule(void);
 void task_ending_handler(void * rsp);
 void *task_wait(void);
 

@@ -42,7 +42,7 @@ __FIQ void FiqHandler(void)
 extern struct task_desc task_desc_tab[];
 
 void dump_ind1(char *str) {
-    void **ptr = (void **) task_desc_tab[1].msg_ind;
+    void **ptr = (void **) task_desc_tab[1].ind_queue;
     Uart1PutS(str);
     Uart1PutS(" ind1: ");
     for (;;) {
@@ -134,19 +134,17 @@ struct task_msg *task1(struct task_msg *msg)
             break;
 
         case 0x11: {
-                struct task_msg t2 = { NULL, 1, 0x20, cnt };
-                //struct task_msg *rsp =
-                task_send_req(&t2, 2);
+                task_send_req(task_malloc(0x20,cnt), 2);
                 break;
             }
 
         case 0x12: {
-                struct task_msg t3 = { NULL, 1, 0x20, cnt };
-                //struct task_msg *rsp =
-                task_send_req(&t3, 3);
+                task_send_req(task_malloc(0x20,cnt), 3);
                 break;
             }
         }
+
+        mem_free(but);
 
     }
 
@@ -155,13 +153,15 @@ struct task_msg *task1(struct task_msg *msg)
 
 struct task_msg *task2(struct task_msg *msg)
 {
-
     Uart1PutS("t2: ");
     Uart1PutU32((uint32_t)msg->param);
     Uart1PutS("\n");
 
-    //struct task_msg *ind =
-    task_wait();
+    mem_free(msg);
+
+    struct task_msg *ind = task_wait();
+
+    mem_free(ind);
 
     Uart1PutS("t2: end\n");
 
@@ -174,8 +174,11 @@ struct task_msg *task3(struct task_msg *msg)
     Uart1PutU32(msg->param);
     Uart1PutS("\n");
 
-    //struct task_msg *ind =
-    task_wait();
+    mem_free(msg);
+
+    struct task_msg *ind = task_wait();
+
+    mem_free(ind);
 
     Uart1PutS("t3: end\n");
 
@@ -209,9 +212,9 @@ void Main(void)
     // release the interrupts
     //PROC_INT_START();
 
-    task_start(NULL, 1);
+    task_asynch(1);
 
-    //task_start(NULL, 3);
+    //task_asynch(3);
 
 
     uint32_t gpio_led = 0;
