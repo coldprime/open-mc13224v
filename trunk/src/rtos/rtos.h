@@ -176,20 +176,31 @@ extern void rtos_free(void *pointer);
  * This function is called before the message is actually filled by the user and this is
  * not a bug.  Since the current thread will only lose focus when it will wait for a
  * message, it has exclusive ownership of the message content until then.
- * @param[in] dest Destination thread
- * @param[in] id Message ID
+ * @param[in] dest Destination thread identifier
+ * @param[in] id RTOS message identifier
  * @param[in] size Size of the required user space in the message
  * @return Pointer to the message user content, can not fail otherwise asserts
  */
 extern void *rtos_msg_post(uint8_t dest, uint16_t id, size_t size);
 
 /**
- * Wait the next RTOS message for the current thread
- * @param[out] src Source thread
- * @param[out] id Message ID
- * @return Pointer to the message user content, NULL if there was no pending message
+ * Retrieve the next RTOS message for the current thread
+ * @param[out] src Source thread identifier
+ * @param[out] id RTOS message identifier
+ * @return Pointer to the message user content
  */
 extern void *rtos_msg_get(uint8_t *src, uint16_t *id);
+
+/**
+ * Wait for a specific RTOS message
+ *
+ * This function stores all the received RTOS messages in the save list until the
+ * specified message is received
+ * @param[in] id Identifier of the RTOS message to wait for
+ * @param[in] timeout Number of milliseconds to wait for
+ * @return Pointer to the message user content, NULL if it timed-out
+ */
+extern void *rtos_msg_wait(uint16_t id, uint32_t timeout);
 
 /**
  * Store a message in the saved messages list of the thread

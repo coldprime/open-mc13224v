@@ -58,7 +58,6 @@ __FIQ void FiqHandler(void)
     case ITC_CRM_INDEX:
         fiq = ext_wu_evt_getf();
 
-
         Uart1PutS("CRM\n");
 
         if (fiq & 1)
@@ -143,6 +142,9 @@ void Thread0(void)
         switch (id)
         {
         case PB0_IND:
+        {
+            uint32_t *cfm;
+
             Uart1PutS("Thread0: rx PB0_IND\n");
 
             // handle the message content
@@ -151,22 +153,24 @@ void Thread0(void)
             // send message to Thread1
             rtos_msg_post(RTOS_T_THREAD1, PB1_REQ, 0);
 
-            // wait for the response message
-            do
+            // wait forever the response message (no timeout)
+            cfm = rtos_msg_wait(PB1_CFM, 0);
+
+            Uart1PutS("Thread0: rx PB1_CFM -> ");
+            // check if the response is positive
+            if (*cfm)
             {
-                msg = rtos_msg_get(&src, &id);
-
-                if (id != PB1_CFM)
-                {
-                    rtos_msg_store(msg);
-                }
-            } while (id != PB1_CFM);
-
-            Uart1PutS("Thread0: rx PB1_CFM\n");
+                Uart1PutS("positive\n");
+            }
+            else
+            {
+                Uart1PutS("negative\n");
+            }
             // handle the message content
-            rtos_msg_free(msg);
+            rtos_msg_free(cfm);
 
             break;
+        }
         default:
             Uart1PutS("Thread0: unknown message received\n");
             break;
@@ -194,28 +198,35 @@ void Thread1(void)
         case PB1_REQ:
         {
             uint8_t sender = src;
+            uint32_t *cfm;
 
             Uart1PutS("Thread1: rx PB1_REQ\n");
             // handle the message content
             rtos_msg_free(msg);
 
-            // wait for an indication from the PB1
-            do
-            {
-                msg = rtos_msg_get(&src, &id);
-
-                if (id != PB1_IND)
-                {
-                    rtos_msg_store(msg);
-                }
-            } while (id != PB1_IND);
-
-            Uart1PutS("Thread1: rx PB1_IND\n");
-            // handle the message content
-            rtos_msg_free(msg);
+            // wait for an indication from the PB1 (timeout 48s)
+            msg = rtos_msg_wait(PB1_IND, 48*1024);
 
             // send message to the sender of the request
-            rtos_msg_post(sender, PB1_CFM, 0);
+            cfm = rtos_msg_post(sender, PB1_CFM, sizeof(*cfm));
+
+            // check if the indication timed-out
+            if (msg != NULL)
+            {
+                Uart1PutS("Thread1: rx PB1_IND\n");
+                // handle the message content
+                rtos_msg_free(msg);
+
+                // indicate that it was successful
+                *cfm = 1;
+            }
+            else
+            {
+                Uart1PutS("Thread1: PB1_IND timed-out\n");
+
+                // indicate that it was not successful
+                *cfm = 0;
+            }
 
             break;
         }

@@ -74,8 +74,8 @@ static void (* const events[])(void) =
 };
 
 /// Definition of the stack for the various threads
-static uint32_t thread0_stack[32];
-static uint32_t thread1_stack[16];
+static uint32_t thread0_stack[64];
+static uint32_t thread1_stack[64];
 
 extern void Thread0(void);
 extern void Thread1(void);
@@ -400,6 +400,35 @@ void *rtos_msg_get(uint8_t *src, uint16_t *id)
 
     return &(msg[1]);
 
+}
+
+void *rtos_msg_wait(uint16_t id, uint32_t timeout)
+{
+
+    // check if there was a timeout configured
+    if (timeout != 0)
+    {
+
+    }
+
+    // wait for the expected message
+    do
+    {
+        void *msg;
+        uint8_t msg_src;
+        uint16_t msg_id;
+
+        // wait for the next message
+        msg = rtos_msg_get(&msg_src, &msg_id);
+
+        // check if this is the expected message
+        if (msg_id == id)
+        {
+            return msg;
+        }
+        // otherwise, save the message
+        rtos_msg_store(msg);
+    } while (1);
 }
 
 void rtos_msg_store(void *pointer)
