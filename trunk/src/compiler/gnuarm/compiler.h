@@ -23,6 +23,8 @@
 #error "File only included with ARM GCC"
 #endif
 
+#include "common/Uart1.h"
+
 /// define the assertion check (in an extreme space optimized way)
 #define ASSERT(__c) {                               \
     if (!(__c)) {                                   \
