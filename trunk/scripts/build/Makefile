@@ -52,6 +52,7 @@ ifneq ($(AC), 1)
 rtos_objects= \
 	../../build/rtos/obj/boot/Init-RAMonly.o \
 	../../build/rtos/obj/common/Uart1.o \
+	../../build/rtos/obj/common/Tmr.o \
 	../../build/rtos/obj/rtos/rtos_asm.o \
 	../../build/rtos/obj/rtos/rtos.o \
 	../../build/rtos/obj/app/rtos_test.o
