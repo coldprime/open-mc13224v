@@ -30,9 +30,14 @@ The structure of the project should help locate the files you are looking for:
    * Makefile : file that generates the header files from the XLS register files
  * libraries/ : library files
  * scripts/ : script files
+  * build/ : build scripts for targets that are not integrated in eclipse project
   * ld/ : link scripts
   * simu/ : simulation scripts (describe the plateform, rom and flash content)
  * src/ : all the source files necessary for the various targets
+ * thirdparty/ : elements that come from other sources
+  * BeeKit/ : elements that come from the FreeScale BeekKit environment
+   * MyStarNetwork Demo (Coordinator)/ : demo software from MAC codebase
+   * Weather Station Controller/ : demo software from SMAC codebase
  * tools/ : set of tools (can be required or not in the build process)
 
 = Documentation =
