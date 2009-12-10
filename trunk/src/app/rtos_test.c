@@ -62,27 +62,27 @@ __FIQ void FiqHandler(void)
     case ITC_CRM_INDEX:
         fiq = ext_wu_evt_getf();
 
-        Uart1PutS("CRM FIQ\n");
+        Uart1PutS("\nCRM FIQ");
 
         if (fiq & 1)
         {
             rtos_eventraise(RTOS_EVENT(PB0));
-            Uart1PutS("PB0\n");
+            Uart1PutS("\nPB0");
         }
         if (fiq & 2)
         {
             rtos_eventraise(RTOS_EVENT(PB1));
-            Uart1PutS("PB1\n");
+            Uart1PutS("\nPB1");
         }
         if (fiq & 4)
         {
             rtos_eventraise(RTOS_EVENT(PB2));
-            Uart1PutS("PB2\n");
+            Uart1PutS("\nPB2");
         }
         if (fiq & 8)
         {
             rtos_eventraise(RTOS_EVENT(PB3));
-            Uart1PutS("PB3\n");
+            Uart1PutS("\nPB3");
         }
         // clear any pending interrupt
         crm_status_set(0xFFFF);
@@ -90,10 +90,22 @@ __FIQ void FiqHandler(void)
 
     case ITC_TMR_INDEX:
         TmrFiq();
+
+        Uart1PutS("\nRTC_COUNT = ");
+        {
+            static uint32_t last = 0;
+            uint32_t current = 0;
+            current = crm_rtc_count_get();
+            Uart1PutU32(current - last);
+            last = current;
+        }
+
+        TmrStart(1000);
+
         break;
 
     default:
-        Uart1PutS("Unsupported FIQ\n");
+        Uart1PutS("\nUnsupported FIQ");
         ASSERT(0);
         break;
     }
@@ -101,7 +113,7 @@ __FIQ void FiqHandler(void)
 
 void event_pb0(void)
 {
-    Uart1PutS("EVT_PB0\n");
+    Uart1PutS("\nEVT_PB0");
 
     // send an indication to the thread0
     rtos_msg_post(RTOS_T_THREAD0, PB0_IND, 0);
@@ -111,7 +123,7 @@ void event_pb0(void)
 
 void event_pb1(void)
 {
-    Uart1PutS("EVT_PB1\n");
+    Uart1PutS("\nEVT_PB1");
 
     // send an indication to the thread1
     rtos_msg_post(RTOS_T_THREAD1, PB1_IND, 0);
@@ -121,21 +133,21 @@ void event_pb1(void)
 
 void event_pb2(void)
 {
-    Uart1PutS("EVT_PB2\n");
+    Uart1PutS("\nEVT_PB2");
 
     rtos_eventclear(RTOS_EVENT(PB2));
 }
 
 void event_pb3(void)
 {
-    Uart1PutS("EVT_PB3\n");
+    Uart1PutS("\nEVT_PB3");
 
     rtos_eventclear(RTOS_EVENT(PB3));
 }
 
 void Thread0(void)
 {
-    Uart1PutS("Thread0 started\n");
+    Uart1PutS("\nThread0 started");
     while (1)
     {
         void *msg;
@@ -154,7 +166,7 @@ void Thread0(void)
         {
             uint32_t *cfm;
 
-            Uart1PutS("Thread0: rx PB0_IND\n");
+            Uart1PutS("\nThread0: rx PB0_IND");
 
             // handle the message content
             rtos_msg_free(msg);
@@ -165,15 +177,15 @@ void Thread0(void)
             // wait forever the response message (no timeout)
             cfm = rtos_msg_wait(PB1_CFM, 0);
 
-            Uart1PutS("Thread0: rx PB1_CFM -> ");
+            Uart1PutS("\nThread0: rx PB1_CFM -> ");
             // check if the response is positive
             if (*cfm)
             {
-                Uart1PutS("positive\n");
+                Uart1PutS("positive");
             }
             else
             {
-                Uart1PutS("negative\n");
+                Uart1PutS("negative");
             }
             // handle the message content
             rtos_msg_free(cfm);
@@ -181,7 +193,7 @@ void Thread0(void)
             break;
         }
         default:
-            Uart1PutS("Thread0: unknown message received\n");
+            Uart1PutS("\nThread0: unknown message received");
             break;
         }
     }
@@ -189,7 +201,7 @@ void Thread0(void)
 
 void Thread1(void)
 {
-    Uart1PutS("Thread1 started\n");
+    Uart1PutS("\nThread1 started");
     while (1)
     {
         void *msg;
@@ -209,7 +221,7 @@ void Thread1(void)
             uint8_t sender = src;
             uint32_t *cfm;
 
-            Uart1PutS("Thread1: rx PB1_REQ\n");
+            Uart1PutS("\nThread1: rx PB1_REQ");
             // handle the message content
             rtos_msg_free(msg);
 
@@ -222,7 +234,7 @@ void Thread1(void)
             // check if the indication timed-out
             if (msg != NULL)
             {
-                Uart1PutS("Thread1: rx PB1_IND\n");
+                Uart1PutS("\nThread1: rx PB1_IND");
                 // handle the message content
                 rtos_msg_free(msg);
 
@@ -231,7 +243,7 @@ void Thread1(void)
             }
             else
             {
-                Uart1PutS("Thread1: PB1_IND timed-out\n");
+                Uart1PutS("\nThread1: PB1_IND timed-out");
 
                 // indicate that it was not successful
                 *cfm = 0;
@@ -240,7 +252,7 @@ void Thread1(void)
             break;
         }
         default:
-            Uart1PutS("Thread1: unknown message received\n");
+            Uart1PutS("\nThread1: unknown message received");
             break;
         }
     }
@@ -266,6 +278,10 @@ InitPlatform(void)
     //   + configure edge detection on low transition
     crm_wu_cntl_set((crm_wu_cntl_get() & ~EXT_WU_POL_MASK) |
             EXT_WU_IEN_MASK | EXT_WU_EN_MASK | EXT_WU_EDGE_MASK);
+
+    // + ring oscillator configuration
+    //   + tune the 2kHz oscillator (coarse=11, fine=24, dependant on every chip)
+    crm_ringosc_cntl_pack(11, 24, 1);
 
     // + status configuration
     //   * clear any pending interrupt
@@ -315,10 +331,12 @@ void Main(void)
     // initialize the TMR
     TmrInit();
 
+    // configure a timer in 1s
+    TmrStart(1000);
+
     // detect the NVM type
-    Uart1PutS("RTOS started: 0x");
+    Uart1PutS("\nRTOS started: 0x");
     Uart1PutU32(0xCAFEBABE);
-    Uart1PutS("\n");
 
     // initialize the Os
     rtos_init(&heap_bottom, &heap_top);

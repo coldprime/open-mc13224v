@@ -30,7 +30,8 @@ struct rtos_mem_free;
 /// Definition of the events in the system, highest priority first
 enum
 {
-    RTOS_E_PB0_INDEX = 0,
+    RTOS_E_TIMER_INDEX = 0,
+    RTOS_E_PB0_INDEX,
     RTOS_E_THREADS_INDEX,
     RTOS_E_PB1_INDEX,
     RTOS_E_PB2_INDEX,
@@ -52,6 +53,7 @@ enum
 /// Definition of the signals in the system
 enum
 {
+    RTOS_S_TIMEOUT = (1 << 30),
     RTOS_S_MSG = (1 << 31),
 };
 
@@ -74,12 +76,20 @@ struct thread_c
     /// Head of the saved messages for the thread
     struct rtos_msg* saved;
 
-    /// Mask of the signals on which the thread is currently waiting (bit 31 is reserved
-    /// for the messages to the thread)
+    /// Mask of the signals on which the thread is currently waiting:
+    ///   + bit 31: pending messages to the thread
     uint32_t sigmask;
 
     /// Thread stack pointer location for storage when thread is pending on signals
     uint32_t sp;
+
+    struct
+    {
+        /// Pointer to the next element in the timed threads list
+        struct thread_c *next;
+        /// Absolute expiration date of the timeout
+        uint32_t date;
+    } timeout;
 };
 
 /// RTOS main environment
@@ -99,6 +109,9 @@ struct rtos
 
     /// Pointer to the first free block to use for allocate/free routines
     struct rtos_mem_free *mfree;
+
+    /// List of the threads that have a timeout running
+    struct thread_c *timed;
 };
 
 /// RTOS environment
@@ -200,7 +213,7 @@ extern void *rtos_msg_get(uint8_t *src, uint16_t *id);
  * @param[in] timeout Number of milliseconds to wait for
  * @return Pointer to the message user content, NULL if it timed-out
  */
-extern void *rtos_msg_wait(uint16_t id, uint32_t timeout);
+extern void *rtos_msg_wait(uint16_t id, uint16_t timeout);
 
 /**
  * Store a message in the saved messages list of the thread

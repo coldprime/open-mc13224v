@@ -1,7 +1,7 @@
 /*
- * Single timer API
+ * Time and timer related API
  *
- * This block provides an interface to a hardware timer.
+ * This block provides an interface to the time and to a timer.
  *
  *    Copyright (C) 2009 Louis Caron
  *
@@ -34,6 +34,12 @@ extern void
 TmrInit(void);
 
 /**
+ * Retrieve the current time in milliseconds since last cold start.
+ */
+extern uint32_t
+TimeGet(void);
+
+/**
  * Function to call upon TMR peripheral FIQ.
  */
 extern void
@@ -50,7 +56,8 @@ TmrStart(uint16_t delay);
  * Stop the timer.
  */
 extern void
-TmrStop();
+TmrStop(void);
+
 
 
 #endif // _TMR_H_

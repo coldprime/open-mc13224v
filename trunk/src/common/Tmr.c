@@ -1,5 +1,5 @@
 /*
- * Single timer API
+ * Time and timer related API
  *
  *    Copyright (C) 2009 Louis Caron
  *
@@ -19,6 +19,9 @@
 
 // minimum include
 #include "Tmr.h"
+
+// for the debug interface
+#include "common/Uart1.h"
 
 // defines for the timer block
 #define REG_TMR_BASE_ADDR (0x80007000)
@@ -73,32 +76,79 @@
 void
 TmrInit(void)
 {
-    // disable timers 0 and 1
-//    TMR_ENBL_REG &= 0xC;
-
     // configure timer 0:
-    //    - do not start
-    //    - primary source = counter1 output
+    //    - count rising edges
+    //    - primary source = peripheral clock
+    //    - count repeatedly and reinitializes once compare reached
+    //    - count up
+    //    - no co_init and no OFLAG
+    TMR0_CTRL_REG = (8<<9)|(0<<6)|(1<<5)|(0<<4)|(0<<3)|(0);
+    TMR0_SCTRL_REG = 0;
+    TMR0_CSCTRL_REG = 0;
+    //    - upon compare reached, reload to 0
+    TMR0_LOAD_REG = 0;
+    //    - count up to 24000 to count milliseconds
+    TMR0_COMP1_REG = 24000;
+
+    // configure timer 1:
+    //    - count rising edges
+    //    - primary source = counter0 output
     //    - count only once and stop
     //    - count up
     //    - no co_init and no OFLAG
-    TMR0_CTRL_REG = (0<<13)|(0xC<<9)|(1<<6)|(1<<5)|(0<<4)|(0<<3)|(0);
+    TMR1_CTRL_REG = (4<<9)|(1<<6)|(0<<5)|(0<<4)|(0<<3)|(0);
     //    - enable interrupt upon successful compare
-    TMR0_SCTRL_REG = (1 << 14);
-    TMR0_COMP1_REG = 0x1000;
-    TMR0_CNTR_REG = 0;
-
-    // start the timer
-    TMR0_CTRL_REG |= (1 << 13);
+    TMR1_SCTRL_REG = (1 << 14);
+    TMR1_CSCTRL_REG = 0;
 }
 
 void
 TmrFiq(void)
 {
-    Uart1PutS("TMR FIQ: SCTRL = 0x");
-    Uart1PutU16(TMR0_SCTRL_REG);
+    Uart1PutS("\nTMR FIQ: CTRL = 0x");
+    Uart1PutU16(TMR1_CTRL_REG);
+    Uart1PutS(", SCTRL = 0x");
+    Uart1PutU16(TMR1_SCTRL_REG);
     Uart1PutS(", CSCTRL = 0x");
-    Uart1PutU16(TMR0_CSCTRL_REG);
-    Uart1PutS("\n");
-    TMR0_SCTRL_REG &= ~(1 << 15);
+    Uart1PutU16(TMR1_CSCTRL_REG);
+
+    // clear the timer compare flag interrupt
+    TMR1_SCTRL_REG &= ~(1 << 15);
+
+    Uart1PutS("\nTMR FIQ: SCTRL = 0x");
+    Uart1PutU16(TMR1_SCTRL_REG);
+}
+
+void
+TmrStart(uint16_t delay)
+{
+    // set the delay in which the timer should expire
+    TMR1_COMP1_REG = delay;
+
+    // reinitialize the timer
+    TMR0_CNTR_REG = 0;
+    TMR1_CNTR_REG = 0;
+
+    // start timer 0 millisecond count
+    TMR0_CTRL_REG |= (1<<13);
+    // start timer 1 single shot synchronous
+    TMR1_CTRL_REG |= (7<<13);
+
+    while (TMR1_CNTR_REG != 3)
+    {
+        Uart1PutS("\nTMR0_CNTR = 0x");
+        Uart1PutU16(TMR0_CNTR_REG);
+        Uart1PutS("\nTMR1_CNTR = 0x");
+        Uart1PutU16(TMR1_CNTR_REG);
+    }
+}
+
+void
+TmrStop(void)
+{
+    // disable timers 0 and 1
+    // start timer 0 millisecond count
+    TMR0_CTRL_REG &= ~(7<<13);
+    // start timer 1 single shot synchronous
+    TMR1_CTRL_REG &= ~(7<<13);
 }

@@ -26,6 +26,9 @@
 // processor related macros
 #include "proc/proc.h"
 
+// time and timer related
+#include "common/Tmr.h"
+
 /// RTOS environment
 struct rtos rtos_env;
 
@@ -57,6 +60,7 @@ struct rtos_msg
 
 
 // define event handlers
+static void schedule_timers(void);
 static void schedule_threads(void);
 extern void event_pb0(void);
 extern void event_pb1(void);
@@ -66,6 +70,7 @@ extern void event_pb3(void);
 /// Main descriptor of the event handlers
 static void (* const events[])(void) =
 {
+    [RTOS_E_TIMER_INDEX]   = schedule_timers,
     [RTOS_E_THREADS_INDEX] = schedule_threads,
     [RTOS_E_PB0_INDEX]     = event_pb0,
     [RTOS_E_PB1_INDEX]     = event_pb1,
@@ -90,6 +95,44 @@ static const struct thread_d threads[] =
 };
 
 static struct thread_c thread_contexts[ARRAY_SIZE(threads)];
+
+/// Schedule the timers that expired in the RTOS
+static void schedule_timers(void)
+{
+    struct thread_c *timed;
+
+    for(;;)
+    {
+        // start by clearing the pending event
+        rtos_eventclear(RTOS_EVENT(TIMER));
+
+        // check the next timer
+        timed = (struct thread_c*)rtos_env.timed;
+
+        if (!timed)
+        {
+            // no more timed threads, then leave
+            break;
+        }
+
+        // check if timer is set in more than 1 ms
+        if ((timed->timeout.date - 1) > 0)
+        {
+            // timer will expire in more than 1 ms, configure the HW
+            TmrStart(timed->timeout.date);
+
+            // in most case, we will break here. However, if the timer expiration
+            // time has just passed, may be the HW was set too late (due to an IRQ)
+            // so we do not exit the loop to process it.
+            if (timed->timeout.date > 0) break;
+        }
+
+        // at this point, the next thread timeout has expired or is about to
+        rtos_env.timed = timed->timeout.next;
+
+        // wake up the thread by raising the
+    }
+}
 
 /// Schedule the threads in the RTOS
 static void schedule_threads(void)
@@ -402,13 +445,13 @@ void *rtos_msg_get(uint8_t *src, uint16_t *id)
 
 }
 
-void *rtos_msg_wait(uint16_t id, uint32_t timeout)
+void *rtos_msg_wait(uint16_t id, uint16_t timeout)
 {
 
     // check if there was a timeout configured
     if (timeout != 0)
     {
-
+        //
     }
 
     // wait for the expected message
