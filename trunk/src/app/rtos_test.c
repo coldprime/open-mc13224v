@@ -280,7 +280,7 @@ InitPlatform(void)
             EXT_WU_IEN_MASK | EXT_WU_EN_MASK | EXT_WU_EDGE_MASK);
 
     // + ring oscillator configuration
-    //   + tune the 2kHz oscillator (coarse=11, fine=24, dependant on every chip)
+    //   + tune the 2kHz oscillator (coarse=11, fine=24, dependent on every chip)
     crm_ringosc_cntl_pack(11, 24, 1);
 
     // + status configuration
@@ -334,7 +334,7 @@ void Main(void)
     // configure a timer in 1s
     TmrStart(1000);
 
-    // detect the NVM type
+    // Debug information
     Uart1PutS("\nRTOS started: 0x");
     Uart1PutU32(0xCAFEBABE);
 
