@@ -133,14 +133,6 @@ TmrStart(uint16_t delay)
     TMR0_CTRL_REG |= (1<<13);
     // start timer 1 single shot synchronous
     TMR1_CTRL_REG |= (7<<13);
-
-    while (TMR1_CNTR_REG != 3)
-    {
-        Uart1PutS("\nTMR0_CNTR = 0x");
-        Uart1PutU16(TMR0_CNTR_REG);
-        Uart1PutS("\nTMR1_CNTR = 0x");
-        Uart1PutU16(TMR1_CNTR_REG);
-    }
 }
 
 void
