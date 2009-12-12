@@ -50,6 +50,7 @@ register_files= \
 
 # include the specific generation scripts
 -include rtos.mk
+-include dumpflash_2_0.mk
 -include dumpflash_2_1.mk
 -include flasher_2_1.mk
 

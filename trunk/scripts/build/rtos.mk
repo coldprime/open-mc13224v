@@ -2,14 +2,14 @@
 TARGETS+=rtos
 
 # local build options
-RTOS_CC= -O3 -g3 -Wall -fno-common -msoft-float \
+rtos_CC= -O3 -g3 -Wall -fno-common -msoft-float \
           -mcpu=arm7tdmi-s -march=armv4t -mtune=arm7tdmi-s \
           -std=c99
-RTOS_INC= \
+rtos_INC= \
 	-I ../../src/compiler/gnuarm \
 	-I ../../src/build/registers \
 	-I ../../src
-RTOS_LD= -nostdlib
+rtos_LD= -nostdlib
 
 # list of the objects needed to link rtos
 ifneq ($(AC), 1)
@@ -32,14 +32,14 @@ endif
 
 ../../build/rtos/obj/%.o: ../../src/%.s $(register_files)
 	mkdir -p $(@D)
-	$(CC) -c $(RTOS_CC) -o $@ $(RTOS_INC) $<
+	$(CC) -c $(rtos_CC) -o $@ $(rtos_INC) $<
 
 ../../build/rtos/obj/%.o: ../../src/%.c $(register_files)
 	mkdir -p $(@D)
-	$(CC) -c $(RTOS_CC) -o $@ $(RTOS_INC) $<
+	$(CC) -c $(rtos_CC) -o $@ $(rtos_INC) $<
 
 ../../build/rtos/rtos.elf: $(rtos_objects)
-	$(LD) $(RTOS_LD) -Map $(@:.elf=.map) -o $@ $? -T ../../scripts/ld/RAMonly.lds
+	$(LD) $(rtos_LD) -Map $(@:.elf=.map) -o $@ $? -T ../../scripts/ld/RAMonly.lds
 
 .PHONY: rtos rtos_clean rtos_install rtos_flash
 .SILENT: rtos rtos_clean rtos_install rtos_flash
