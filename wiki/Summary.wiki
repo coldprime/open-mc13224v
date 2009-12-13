@@ -9,19 +9,31 @@ It provides:
  * the rules to build the applications
  * a set of tools that are necessary to interface the chip from a host computer
  * the libraries of the ROM
+ * data files: 
+  * dumps of the reserved (calibration) area of the flash of the chip I own
+  * dump of the ROM of the chips I own
 
-I started this project with the Freescale MC13224V kits from [http://www.redwirellc.com/store RedWireLLC] and all the targets in this project were tested successfully on this boards.
+I started this project with the Freescale MC13224V kits from [http://www.redwirellc.com/store RedWireLLC] and all the targets in this project were tested successfully on these boards.
 
 = Details =
 
 The requirements for this project are:
- * Eclipse 3.2+ installed
+ * make
  * Python 2.4+
- * gcc for ARM
+ * gcc for ARM (see [here|ArmSuite] for build instructions)
+ * USB port
+
+Optional:
+ * Eclipse 3.2+ : the project is also an eclipse project but it is not required to use it.  I do because it integrates in a single application many applications I need (IDE, debugger, SVN interface).  Ther project has only one build target (all) that builds all the applications.
 
 = Project Structure =
 The structure of the project should help locate the files you are looking for:
 
+ * .project
+ * .cproject
+ * .pydevproject
+ * .settings/ : eclipse project related files (can be removed if you don't use eclipse)
+ * build/ : all the results of the build processes (not checked in)
  * data/ : data files that are not required by the build process
   * flash/ : content of the last page of the flash of the chips that I own
   * rom/ : chip rom content (in different versions if available)
@@ -30,9 +42,9 @@ The structure of the project should help locate the files you are looking for:
    * Makefile : file that generates the header files from the XLS register files
  * libraries/ : library files
  * scripts/ : script files
-  * build/ : build scripts for targets that are not integrated in eclipse project
+  * build/ : build scripts for all the targets of the project
   * ld/ : link scripts
-  * simu/ : simulation scripts (describe the plateform, rom and flash content)
+  * simu/ : simulation scripts (describe the platform, rom and flash content), the SystemC (TLM 2.0) based simulation tool can not be made public for the time being
  * src/ : all the source files necessary for the various targets
  * thirdparty/ : elements that come from other sources
   * BeeKit/ : elements that come from the FreeScale BeekKit environment
