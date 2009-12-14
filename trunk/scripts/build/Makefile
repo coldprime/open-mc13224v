@@ -35,7 +35,22 @@ BUILDIMAGES=python ../../tools/buildimages/buildimages.py
 ../../src/build/registers/reg_uart2.h: ../../docs/registers/UART.xls
 	mkdir -p $(dir $@)
 	$(REG) --short $< "UART2_" 0x8000B000 $@
-
+## TMR0
+../../src/build/registers/reg_tmr0.h: ../../docs/registers/TMR.xls
+	mkdir -p $(dir $@)
+	$(REG) --short $< "TMR0_" 0x80007000 $@
+## TMR1
+../../src/build/registers/reg_tmr1.h: ../../docs/registers/TMR.xls
+	mkdir -p $(dir $@)
+	$(REG) --short $< "TMR1_" 0x80007020 $@
+## TMR2
+../../src/build/registers/reg_tmr2.h: ../../docs/registers/TMR.xls
+	mkdir -p $(dir $@)
+	$(REG) --short $< "TMR2_" 0x80007040 $@
+## TMR3
+../../src/build/registers/reg_tmr3.h: ../../docs/registers/TMR.xls
+	mkdir -p $(dir $@)
+	$(REG) --short $< "TMR3_" 0x80007060 $@
 
 # list of the generated register
 register_files= \
@@ -45,7 +60,11 @@ register_files= \
 	../../src/build/registers/reg_spi.h \
 	../../src/build/registers/reg_spif.h \
 	../../src/build/registers/reg_uart1.h \
-	../../src/build/registers/reg_uart2.h
+	../../src/build/registers/reg_uart2.h \
+	../../src/build/registers/reg_tmr0.h \
+	../../src/build/registers/reg_tmr1.h \
+	../../src/build/registers/reg_tmr2.h \
+	../../src/build/registers/reg_tmr3.h
 
 
 # include the specific generation scripts

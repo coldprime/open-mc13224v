@@ -111,7 +111,7 @@ class xls_field:
 
 class xls_register:
     "class of an xls register definition"
-    def __init__(self, name, addr, hw, sw, verbose=False):
+    def __init__(self, name, addr, msb, hw, sw, verbose=False):
         "constructor"
 
         # save the verbose directive
@@ -140,7 +140,21 @@ class xls_register:
         if result == None:
             raise LegalException("""ERROR: register "%s" address "%s" not parsable"""%(name, addr))
         self.addr = int(result.group(2), 16)
+        
+        # check the format of the high bit
+        try:
+            self.msb = int(msb)
+        except:
+            raise LegalException("""ERROR: register "%s" can not parse MSB index "%s" """%(name, msb))
+        
+        if self.msb != 15 and self.msb != 31:
+            raise LegalException("""ERROR: register "%s" MSB index "%d" not 15 or 31"""%(name, self.msb))
 
+        self.width = self.msb + 1
+        
+        # build the type name
+        self.type = "uint%d_t"%(self.width, )
+        
         if self.verbose:
             print("  +-|-> register : %s %s"%(name, hex(self.addr)))
 
@@ -311,9 +325,9 @@ class xls_block:
         # initialize the last noregister register index
         self.last_noregister_index = 0
 
-    def start_register(self, name, addr, hw, sw):
+    def start_register(self, name, addr, msb, hw, sw):
         # create new register
-        self.cur_reg = xls_register(name, addr, hw, sw, self.verbose)
+        self.cur_reg = xls_register(name, addr, msb, hw, sw, self.verbose)
 
     def end_register(self):
         # end of the register
@@ -414,6 +428,7 @@ class xls:
                     # create a new register with name and address
                     self.cur_block.start_register(self.wsheet.cell_value(cur_row, 3),
                                                   self.wsheet.cell_value(cur_row+2, 0),
+                                                  self.wsheet.cell_value(cur_row+1, 3),
                                                   self.wsheet.cell_value(cur_row+2, 1),
                                                   self.wsheet.cell_value(cur_row+2, 2))
 
@@ -421,16 +436,17 @@ class xls:
                     cur_row += 1
 
                     # parse the bits of the register
-                    for cur_col in range(3, 35):
+                    cur_col = 3
+                    while (self.wsheet.cell_value(cur_row, cur_col) != ""):
                         # check the bit number
                         try:
                             bitpos = int(self.wsheet.cell_value(cur_row, cur_col))
                         except:
-                            print("""ERROR: cell "%s", unexpected bit value"""%
+                            print("""ERROR: cell "%s", unparsable bit value"""%
                                 (xlrd.cellname(cur_row,cur_col), ))
                             bitpos = 0
                         # check if there is a correct bit number at this column
-                        if bitpos == (34 - cur_col):
+                        if bitpos == (self.cur_block.cur_reg.msb + 3 - cur_col):
                             # add the bit with the name, the bit position and reset value
                             self.cur_block.add_bit(self.wsheet.cell_value(cur_row + 1, cur_col),
                                                    bitpos,
@@ -440,6 +456,8 @@ class xls:
                         else:
                             print("""ERROR: cell "%s", unexpected bit value "%s" """%
                                 (xlrd.cellname(cur_row,cur_col), bitpos))
+                        # increment the column index
+                        cur_col += 1
 
                     # pass six rows
                     cur_row += 6

@@ -247,11 +247,11 @@ class header:
             if not forsimu:
                 if reg.multi:
                     fout.write(  (  "#define %s_REG(i)    "
-                                  + "(* (((volatile uint32_t *)0x%08X) + i) )\n")
-                               % (regname, (reg.addr + self.regaddr)))
+                                  + "(* (((volatile %s *)0x%08X) + i) )\n")
+                               % (regname, reg.type, (reg.addr + self.regaddr)))
                 else:
-                    fout.write(  "#define %s_REG    (*(volatile uint32_t *)(0x%08X))\n"
-                               % (regname, (reg.addr + self.regaddr)))
+                    fout.write(  "#define %s_REG    (*(volatile %s *)(0x%08X))\n"
+                               % (regname, reg.type, (reg.addr + self.regaddr)))
 
                 fout.write("#define %s_ADDR   0x%08X\n"%(regname, (reg.addr + self.regaddr)))
                 fout.write("#define %s_OFFSET 0x%08X\n"%(regname, (reg.addr)))
@@ -313,7 +313,7 @@ class header:
                     fout.write(" * The %s register will be read and its value returned.\n"%(regname,))
                     fout.write(" * @return The current value of the %s register.\n"%(regname,))
                     fout.write(" */\n")
-                fout.write("__INLINE uint32_t %s_get(%s)\n"%(regname.lower(), param_one))
+                fout.write("__INLINE %s %s_get(%s)\n"%(reg.type, regname.lower(), param_one))
                 fout.write(func_beg)
                 fout.write("    return %s;\n" % (reg_rd))
                 fout.write(func_end)
@@ -327,7 +327,7 @@ class header:
                     fout.write(" * @param value - The value to write.\n")
                     fout.write(" */\n")
 
-                fout.write("__INLINE void %s_%s(%suint32_t value)\n"%(regname.lower(), func_set_name, param_beg))
+                fout.write("__INLINE void %s_%s(%s%s value)\n"%(regname.lower(), func_set_name, param_beg, reg.type))
                 fout.write(func_beg)
                 fout.write("    %svalue%s;\n"%(reg_wr_beg, reg_wr_end))
                 fout.write(func_end)
@@ -351,7 +351,7 @@ class header:
 
                 str_def_hex = "#define %-" + str(max_fieldhname) + "s  0x%X\n"
                 for field in reg.fields:
-                    fout.write(str_def_hex % (field.h_name + "_RST", field.reset))
+                    fout.write(str_def_hex % (field_prefix + field.h_name + "_RST", field.reset))
 
                 fout.write("\n")
 
@@ -413,7 +413,7 @@ class header:
                         else:
                             fout.write(", ")
                     fout.write(func_beg)
-                    fout.write("    uint32_t localVal = %s;\n"%(reg_rd))
+                    fout.write("    %s localVal = %s;\n"%(reg.type, reg_rd))
                     fout.write("\n")
                     for field in reg.fields:
                         if len(reg.fields) == 1:
@@ -436,7 +436,7 @@ class header:
                         fout.write(" */\n")
                     fout.write("__INLINE %s %s%s_getf(%s)\n"%(field.type, field_prefix.lower(), field.h_name.lower(), param_one ))
                     fout.write(func_beg)
-                    fout.write("    uint32_t localVal = %s;\n"%(reg_rd))
+                    fout.write("    %s localVal = %s;\n"%(reg.type, reg_rd))
 
                     # do not mask for single field
                     if len(reg.fields) == 1:
