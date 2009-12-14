@@ -31,7 +31,7 @@ dumpflash_2_0_objects= \
 
 
 ../../build/dumpflash_2_0/dumpflash_2_0.elf: $(dumpflash_2_0_objects)
-	$(LD) $(dumpflash_2_0_LD) -Map $(@:.elf=.map) -o $@ $? $(dumpflash_2_0_LIBS) -T ../../scripts/ld/RAMROM.lds
+	$(LD) $(dumpflash_2_0_LD) -Map $(@:.elf=.map) -o $@ $+ $(dumpflash_2_0_LIBS) -T ../../scripts/ld/RAMROM.lds
 
 .PHONY: dumpflash_2_0 dumpflash_2_0_clean dumpflash_2_0_install dumpflash_2_0_flash
 .SILENT: dumpflash_2_0 dumpflash_2_0_clean dumpflash_2_0_install dumpflash_2_0_flash

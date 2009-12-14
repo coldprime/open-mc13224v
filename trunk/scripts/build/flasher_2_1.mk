@@ -31,7 +31,7 @@ flasher_2_1_objects= \
 
 
 ../../build/flasher_2_1/flasher_2_1.elf: $(flasher_2_1_objects)
-	$(LD) $(FLASH_2_1_LD) -Map $(@:.elf=.map) -o $@ $? $(FLASH_2_1_LIBS) -T ../../scripts/ld/RAMROM.lds
+	$(LD) $(FLASH_2_1_LD) -Map $(@:.elf=.map) -o $@ $+ $(FLASH_2_1_LIBS) -T ../../scripts/ld/RAMROM.lds
 
 .PHONY: flasher_2_1 flasher_2_1_clean flasher_2_1_install flasher_2_1_flash
 .SILENT: flasher_2_1 flasher_2_1_clean flasher_2_1_install flasher_2_1_flash

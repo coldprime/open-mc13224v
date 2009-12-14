@@ -39,7 +39,7 @@ endif
 	$(CC) -c $(rtos_CC) -o $@ $(rtos_INC) $<
 
 ../../build/rtos/rtos.elf: $(rtos_objects)
-	$(LD) $(rtos_LD) -Map $(@:.elf=.map) -o $@ $? -T ../../scripts/ld/RAMonly.lds
+	$(LD) $(rtos_LD) -Map $(@:.elf=.map) -o $@ $+ -T ../../scripts/ld/RAMonly.lds
 
 .PHONY: rtos rtos_clean rtos_install rtos_flash
 .SILENT: rtos rtos_clean rtos_install rtos_flash
