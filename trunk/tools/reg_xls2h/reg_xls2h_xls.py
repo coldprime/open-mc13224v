@@ -282,23 +282,6 @@ class xls_register:
             self.writable = False
             self.writable_fields = []
 
-# name translation for MAC registers
-# key is original name to match
-# 0 is new name
-# 1 is short name (field prefix)
-# 2 is field prefix to remove
-# 3 is to generate read functions (useless for set/clear reg)
-# 4 is to generate field macro (useless for set/clear/trig/ack/status/... reg)
-trans_reg = {}
-trans_reg['genIntEventSetReg'] =   ['genIntStatusReg', 'status_', 'set', True, False ]
-trans_reg['genIntEventClearReg'] = ['genIntAckReg', 'ack_', 'clear', False, False ]
-trans_reg['genIntUnMaskReg'] =     ['genIntEnableReg', 'enable_', 'mask', True, True ] # master field!
-
-trans_reg['txRxIntEventSetReg'] =   ['txRxIntStatusReg', 'status_', 'set', True, False ]
-trans_reg['txRxIntEventClearReg'] = ['txRxIntAckReg', 'ack_', 'clear', False, False ]
-trans_reg['txRxIntUnMaskReg'] =     ['txRxIntEnableReg', 'enable_', 'mask', True, True ]  # master field!
-
-
 class xls_block:
     "class of an xls block definition"
     def __init__(self, name, addr, verbose):
@@ -336,7 +319,7 @@ class xls_block:
         # end of the register
         self.cur_reg.end()
 
-        # check if there is already a register with the same address (except RF!)
+        # check if there is already a register with the same address
         if self.cur_reg.addr in map(lambda x: x.addr, self.registers):
             raise LegalException("""ERROR: register with same address "%s" already exists"""%(hex(self.cur_reg.addr), ))
 
@@ -347,107 +330,6 @@ class xls_block:
 
             if self.cur_reg.name in map(lambda x: x.name, self.registers):
                 raise LegalException("""ERROR: register with same name "%s" already exists"""%(self.cur_reg.name, ))
-
-            # assign default properties that might be modified below
-            self.cur_reg.gen_read = True
-            self.cur_reg.gen_field = True
-            self.cur_reg.short_name = ""
-
-            # name translation for MAC registers
-            if trans_reg.has_key(self.cur_reg.name):
-                # register to translate with custom rules below
-                list_modif = trans_reg[self.cur_reg.name]
-                self.cur_reg.name = list_modif[0]
-                self.cur_reg.short_name = list_modif[1]
-                for f in self.cur_reg.fields:
-                    if f.name.startswith(list_modif[2]):
-                        # field prefix matches, suppress it
-                        f.name = f.name[len(list_modif[2]):]
-                self.cur_reg.gen_read = list_modif[3]
-
-                # here we disable field generation but we should test if they are the
-                # same than in the other register (todo)
-                self.cur_reg.gen_field = list_modif[4]
-                #print "TRANS:", self.cur_reg.name
-
-            # assign default properties that might be modified below
-            self.cur_reg.cs_name = self.cur_reg.name
-
-            # define functions for set/clear identification
-
-            # if clear reg, return name without suffix, else None
-            def check_reg_clear(reg):
-                if reg.sw == 'C' and reg.name.endswith('_CLEAR'):
-                    return reg.name.rsplit('_',1)[0]
-                if reg.sw == 'C' and reg.name.endswith('ClearReg'):
-                    return reg.name[:-len('ClearReg')]
-                return None
-
-            # if set reg, return name without suffix, else None
-            def check_reg_set(reg):
-                if reg.sw == 'S' and reg.name.endswith('_SET'):
-                    return reg.name.rsplit('_',1)[0]
-                if reg.sw == 'S' and reg.name.endswith('SetReg'):
-                    return reg.name[:-len('SetReg')]
-                return None
-
-            # remove all set/clear pre/suffixes in field name
-            def trunk_field(f):
-                for i in range(0,len(f)):
-                    if f[i].name.endswith('_CLEAR') or f[i].name.endswith('_SET'):
-                        f[i].name = f[i].name.rsplit('_',1)[0]
-                    elif f[i].name.startswith('CLEAR_') or f[i].name.startswith('SET_'):
-                        f[i].name = f[i].name.split('_',1)[0]
-                    elif f[i].name.startswith('set'):
-                        f[i].name = f[i].name[3:]
-                    elif  f[i].name.startswith('clear'):
-                        f[i].name = f[i].name[5:]
-
-            # remove all set/clear pre/suffixes in field name
-            def check_same_field(f1, f2):
-                if len(f1) != len(f2):
-                    return True
-                for i in range(0,len(f1)) :
-                    #print f1[i].name, f2[i].name
-                    if f1[i].name != f2[i].name \
-                        or f1[i].width != f2[i].width \
-                        or f1[i].high_bitpos != f2[i].high_bitpos \
-                        or f1[i].low_index != f2[i].low_index \
-                        or f1[i].reset != f2[i].reset:
-                        return True
-                return False
-
-            # clear register identification
-            pruned = check_reg_clear(self.cur_reg)
-            if pruned:
-                self.cur_reg.cs_name = pruned
-                trunk_field(self.cur_reg.fields)
-                # add register fields in clear dico
-                self.reg_clear[pruned] = self.cur_reg.fields
-                if self.reg_set.has_key(pruned):
-                    # equivalent register in set dico!
-                    #print "C SYM!:", self.cur_reg.name
-                    self.cur_reg.gen_read = False
-                    self.cur_reg.gen_field = False
-                    # check if fields are the same
-                    if check_same_field(self.cur_reg.fields, self.reg_set[pruned]):
-                        raise LegalException("""ERROR: registers set/clear "%s" with different fields"""%(self.cur_reg.name, ))
-            else:
-                # set register identification
-                pruned = check_reg_set(self.cur_reg)
-                if pruned:
-                    self.cur_reg.cs_name = pruned
-                    trunk_field(self.cur_reg.fields)
-                    # add register fields in set dico
-                    self.reg_set[pruned] = self.cur_reg.fields
-                    if self.reg_clear.has_key(pruned):
-                        # equivalent register in clear dico!
-                        #print "S SYM!:", self.cur_reg.name
-                        self.cur_reg.gen_read = False
-                        self.cur_reg.gen_field = False
-                        # check if fields are the same
-                        if check_same_field(self.cur_reg.fields, self.reg_clear[pruned]):
-                            raise LegalException("""ERROR: registers set/clear "%s" with different fields"""%(self.cur_reg.name, ))
 
         # check if it is a noregister register
         if self.cur_reg.name == "NOREGISTER":
@@ -508,7 +390,7 @@ class xls:
         self.blocks = []
 
     def extract_all(self):
-        "method to extract the information from the cell"
+        "method to extract the information from the xls sheet"
 
         # initialize the state
         cur_row = 0

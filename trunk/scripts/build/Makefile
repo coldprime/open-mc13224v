@@ -55,13 +55,19 @@ register_files= \
 -include flasher_2_1.mk
 
 .DEFAULT_GOAL=default
-.SILENT: default all
+.SILENT: default all nuke regs
 default:
 	echo "No target specified among: "
-	echo $(TARGETS)
+	echo "all nuke regs $(TARGETS)"
 
 all: $(TARGETS)
 	echo "Done building all targets"
 
 nuke:
 	rm -rf ../../build
+	rm -rf $(register_files)
+	echo "Done removing all targets"
+
+regs: $(register_files)
+	echo "Done building registers"
+	

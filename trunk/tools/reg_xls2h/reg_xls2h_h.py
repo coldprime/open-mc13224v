@@ -201,17 +201,12 @@ class header:
                 continue
 
             # do the initial name translation and creation before generation
-            #  - remove register trailing Reg
-            regname = re.sub("Reg$", '', reg.name)
-            cs_regname = re.sub("Reg$", '', reg.cs_name)
-            #  - translate into our naming standard
-            cs_regname = translate(cs_regname)
-            regname = translate(regname)
+            regname = translate(reg.name)
 
-            if longname and (len(reg.fields) != 1 or reg.fields[0].name != cs_regname):
-                field_prefix = cs_regname + '_'
+            if longname and (len(reg.fields) != 1 or reg.fields[0].name != regname):
+                field_prefix = regname + '_'
             else:
-                field_prefix = reg.short_name
+                field_prefix = ""
 
             #  - generate the names required for the parameters
             for field in reg.fields:
@@ -224,7 +219,6 @@ class header:
 
             # add a potential prefix to the register name
             regname = self.prefix + regname
-            cs_regname = self.prefix + cs_regname
 
             # generate description
             fout.write("/**\n")
@@ -312,14 +306,14 @@ class header:
                 func_set_name = "set"
 
             # REG_get function
-            if reg.sw != 'W' and reg.gen_read:
+            if reg.sw != 'W':
                 if gendoc:
                     fout.write("/**\n")
                     fout.write(" * @brief Returns the current value of the %s register.\n"%(regname,))
                     fout.write(" * The %s register will be read and its value returned.\n"%(regname,))
                     fout.write(" * @return The current value of the %s register.\n"%(regname,))
                     fout.write(" */\n")
-                fout.write("__INLINE uint32_t %s_get(%s)\n"%(cs_regname.lower(), param_one))
+                fout.write("__INLINE uint32_t %s_get(%s)\n"%(regname.lower(), param_one))
                 fout.write(func_beg)
                 fout.write("    return %s;\n" % (reg_rd))
                 fout.write(func_end)
@@ -333,36 +327,33 @@ class header:
                     fout.write(" * @param value - The value to write.\n")
                     fout.write(" */\n")
 
-                fout.write("__INLINE void %s_%s(%suint32_t value)\n"%(cs_regname.lower(), func_set_name, param_beg))
+                fout.write("__INLINE void %s_%s(%suint32_t value)\n"%(regname.lower(), func_set_name, param_beg))
                 fout.write(func_beg)
                 fout.write("    %svalue%s;\n"%(reg_wr_beg, reg_wr_end))
                 fout.write(func_end)
 
             if len(reg.fields) != 0:
-                if reg.gen_field:
-                    fout.write("// field definitions\n")
+                fout.write("// field definitions\n")
 
-                    str_def_hex = "#define %-" + str(max_fieldhname) + "s  0x%08X\n"
-                    str_def_dec = "#define %-" + str(max_fieldhname) + "s  %d\n"
+                str_def_hex = "#define %-" + str(max_fieldhname) + "s  0x%08X\n"
+                str_def_dec = "#define %-" + str(max_fieldhname) + "s  %d\n"
 
-                    for field in reg.fields:
-                        if field.width == 1:
-                            fout.write(str_def_hex % (field.h_name + "_BIT  ", field.mask))
-                            fout.write(str_def_dec % (field.h_name + "_POS  ", field.low_bitpos))
-                        else:
-                            fout.write(str_def_hex % (field.h_name + "_MASK ",  field.mask))
-                            fout.write(str_def_dec % (field.h_name + "_LSB  ", field.low_bitpos))
-                            fout.write(str_def_hex % (field.h_name + "_WIDTH", field.width))
+                for field in reg.fields:
+                    if field.width == 1:
+                        fout.write(str_def_hex % (field.h_name + "_BIT  ", field.mask))
+                        fout.write(str_def_dec % (field.h_name + "_POS  ", field.low_bitpos))
+                    else:
+                        fout.write(str_def_hex % (field.h_name + "_MASK ",  field.mask))
+                        fout.write(str_def_dec % (field.h_name + "_LSB  ", field.low_bitpos))
+                        fout.write(str_def_hex % (field.h_name + "_WIDTH", field.width))
 
-                    fout.write("\n")
+                fout.write("\n")
 
-                    str_def_hex = "#define %-" + str(max_fieldhname) + "s  0x%X\n"
-                    for field in reg.fields:
-                        fout.write(str_def_hex % (field.h_name + "_RST", field.reset))
+                str_def_hex = "#define %-" + str(max_fieldhname) + "s  0x%X\n"
+                for field in reg.fields:
+                    fout.write(str_def_hex % (field.h_name + "_RST", field.reset))
 
-                    fout.write("\n")
-                else:
-                    fout.write("// fields defined in symmetrical set/clear register\n")
+                fout.write("\n")
 
                 # only provide pack writable registers that have a writable field
                 if reg.writable and len(reg.writable_fields) > 1:
@@ -401,7 +392,7 @@ class header:
                     fout.write(func_end)
 
                 # REG_unpack function
-                if reg.sw != 'W' and reg.gen_read and len(reg.fields) > 1:
+                if reg.sw != 'W' and len(reg.fields) > 1:
                     if gendoc:
                         fout.write("/**\n")
                         fout.write(" * @brief Unpacks %s's fields from current value of the %s register.\n"%(regname, regname))
@@ -413,7 +404,7 @@ class header:
                             fout.write(" * @param[out] %s - Will be populated with the current value of this field from the register.\n"%(field.h_param,))
                         fout.write(" */\n")
 
-                    fout.write("__INLINE void %s_unpack(%s"%(cs_regname.lower(), param_beg))
+                    fout.write("__INLINE void %s_unpack(%s"%(regname.lower(), param_beg))
                     for field in reg.fields:
                         fout.write("%s* %s"%(field.type, field.h_param))
                         # check if it is the last element
@@ -434,7 +425,7 @@ class header:
 
             # loop on all the fields to generate the field related
             for field in reg.fields:
-                if field.sw != 'W' and reg.gen_read:
+                if field.sw != 'W':
                     if gendoc:
                         fout.write("/**\n")
                         fout.write(" * @brief Returns the current value of the %s field in the %s register.\n"%(field.name, regname))
