@@ -97,5 +97,5 @@ Uart1GetC(void)
     while (uart1_urxcon_get() == 0) ;
 
     // return the char
-    return (char)udata_getf();
+    return (char)uart1_udata_getf();
 }

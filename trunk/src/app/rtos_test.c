@@ -55,12 +55,12 @@ __FIQ void FiqHandler(void)
     uint8_t fiq;
 
     // check were the FIQ is coming from
-    fiq = fivector_getf();
+    fiq = itc_fivector_getf();
 
     switch (fiq)
     {
     case ITC_CRM_INDEX:
-        fiq = ext_wu_evt_getf();
+        fiq = crm_ext_wu_evt_getf();
 
         Uart1PutS("\nCRM FIQ");
 
@@ -307,8 +307,8 @@ InitPlatform(void)
 
     // ITC configuration:
     // enable CRM and TMR in interrupt controller
-    intenable_setf((1<<ITC_CRM_INDEX) | (1<<ITC_TMR_INDEX));
-    inttype_setf((1<<ITC_CRM_INDEX) | (1<<ITC_TMR_INDEX));
+    itc_intenable_setf((1<<ITC_CRM_INDEX) | (1<<ITC_TMR_INDEX));
+    itc_inttype_setf((1<<ITC_CRM_INDEX) | (1<<ITC_TMR_INDEX));
 
     // clear pending interrupts from the CRM after the GPIO PD/PU configuration is stable
     {

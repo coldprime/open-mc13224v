@@ -204,9 +204,9 @@ class header:
             regname = translate(reg.name)
 
             if longname and (len(reg.fields) != 1 or reg.fields[0].name != regname):
-                field_prefix = regname + '_'
+                field_prefix = self.prefix + regname + '_'
             else:
-                field_prefix = ""
+                field_prefix = self.prefix
 
             #  - generate the names required for the parameters
             for field in reg.fields:

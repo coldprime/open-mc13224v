@@ -25,17 +25,17 @@ void
 FlashStartReg(void)
 {
     // turn NVM regulator OFF
-    vreg_1p8v_en_setf(0);
+    crm_vreg_1p8v_en_setf(0);
 
     // clear the BUCK_EN and enable the BUCK bypass
-    buck_en_setf(0);
-    buck_bypass_en_setf(1);
+    crm_buck_en_setf(0);
+    crm_buck_bypass_en_setf(1);
 
     // turn NVM regulator ON
-    vreg_1p8v_en_setf(1);
+    crm_vreg_1p8v_en_setf(1);
 
     // wait until 1.8V is ready
-    while (vreg_1p8v_rdy_getf() == 0) ;
+    while (crm_vreg_1p8v_rdy_getf() == 0) ;
 }
 
 
@@ -43,5 +43,5 @@ void
 FlashStopReg(void)
 {
     // turn NVM regulator OFF
-    vreg_1p8v_en_setf(0);
+    crm_vreg_1p8v_en_setf(0);
 }
