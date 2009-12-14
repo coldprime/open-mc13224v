@@ -1,5 +1,5 @@
 /*
- * Time and timer related API
+ * Timer related API
  *
  *    Copyright (C) 2009 Louis Caron
  *
@@ -18,7 +18,7 @@
  */
 
 // minimum include
-#include "Tmr.h"
+#include "Timer.h"
 
 // for the debug interface
 #include "common/Uart1.h"
@@ -74,7 +74,7 @@
 #define TMR_ENBL_REG     (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x1E))
 
 void
-TmrInit(void)
+TimerInit(void)
 {
     // configure timer 0:
     //    - count rising edges
@@ -103,7 +103,7 @@ TmrInit(void)
 }
 
 void
-TmrFiq(void)
+TimerInt(void)
 {
     Uart1PutS("\nTMR FIQ: CTRL = 0x");
     Uart1PutU16(TMR1_CTRL_REG);
@@ -120,7 +120,7 @@ TmrFiq(void)
 }
 
 void
-TmrStart(uint16_t delay)
+TimerStart(uint16_t delay)
 {
     // set the delay in which the timer should expire
     TMR1_COMP1_REG = delay;
@@ -136,7 +136,7 @@ TmrStart(uint16_t delay)
 }
 
 void
-TmrStop(void)
+TimerStop(void)
 {
     // disable timers 0 and 1
     // start timer 0 millisecond count

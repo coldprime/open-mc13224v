@@ -3,7 +3,7 @@ CC=arm-elf-gcc
 LD=arm-elf-ld
 REG=python ../../tools/reg_xls2h/reg_xls2h.py
 LOAD=python ../../tools/loaduart/loaduart.py
-LOAD_FLAGS ?= -c 5
+LOAD_FLAGS ?= -c 7 -p
 BUILDIMAGES=python ../../tools/buildimages/buildimages.py
 
 # register file targets:

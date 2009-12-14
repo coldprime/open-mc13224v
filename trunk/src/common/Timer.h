@@ -1,7 +1,7 @@
 /*
- * Time and timer related API
+ * Timer related API
  *
- * This block provides an interface to the time and to a timer.
+ * This block provides an interface to the system timer.
  *
  *    Copyright (C) 2009 Louis Caron
  *
@@ -19,8 +19,8 @@
  *    along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _TMR_H_
-#define _TMR_H_
+#ifndef _TIMER_H_
+#define _TIMER_H_
 
 // standard includes
 #include <stdint.h>
@@ -31,33 +31,27 @@
  * @warning Peripheral clock is expected to be 24MHz
  */
 extern void
-TmrInit(void);
-
-/**
- * Retrieve the current time in milliseconds since last cold start.
- */
-extern uint32_t
-TimeGet(void);
+TimerInit(void);
 
 /**
  * Function to call upon TMR peripheral FIQ.
  */
 extern void
-TmrFiq(void);
+TimerInt(void);
 
 /**
  * Start a timer with a given delay.
  * @param[in] delay Number of milliseconds in which the timer should expire
  */
 extern void
-TmrStart(uint16_t delay);
+TimerStart(uint16_t delay);
 
 /**
  * Stop the timer.
  */
 extern void
-TmrStop(void);
+TimerStop(void);
 
 
 
-#endif // _TMR_H_
+#endif // _TIMER_H_

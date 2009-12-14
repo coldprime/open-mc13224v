@@ -22,7 +22,7 @@
 #include "proc/proc.h"
 
 #include "common/Uart1.h"
-#include "common/Tmr.h"
+#include "common/Timer.h"
 
 #include "reg_gpio.h"
 #include "reg_crm.h"
@@ -89,7 +89,7 @@ __FIQ void FiqHandler(void)
         break;
 
     case ITC_TMR_INDEX:
-        TmrFiq();
+        TimerInt();
 
         Uart1PutS("\nRTC_COUNT = ");
         {
@@ -100,7 +100,7 @@ __FIQ void FiqHandler(void)
             last = current;
         }
 
-        TmrStart(1000);
+        TimerStart(1000);
 
         break;
 
@@ -329,10 +329,10 @@ void Main(void)
     Uart1Init();
 
     // initialize the TMR
-    TmrInit();
+    TimerInit();
 
     // configure a timer in 1s
-    TmrStart(1000);
+    TimerStart(1000);
 
     // Debug information
     Uart1PutS("\nRTOS started: 0x");
@@ -343,8 +343,6 @@ void Main(void)
 
     // release the interrupts
     PROC_INT_START();
-
-//    while (1);
 
     // schedule the next thread, should never return, pass the base pointer of the stack
     rtos_scheduler((uint32_t*)&stack_base_svc);

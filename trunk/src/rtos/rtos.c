@@ -27,7 +27,7 @@
 #include "proc/proc.h"
 
 // time and timer related
-#include "common/Tmr.h"
+#include "common/Timer.h"
 
 /// RTOS environment
 struct rtos rtos_env;
@@ -119,7 +119,7 @@ static void schedule_timers(void)
         if ((timed->timeout.date - 1) > 0)
         {
             // timer will expire in more than 1 ms, configure the HW
-            TmrStart(timed->timeout.date);
+            TimerStart(timed->timeout.date);
 
             // in most case, we will break here. However, if the timer expiration
             // time has just passed, may be the HW was set too late (due to an IRQ)
