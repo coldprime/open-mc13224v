@@ -20,53 +20,57 @@
 // minimum include
 #include "Timer.h"
 
+// include the timers registers
+#include "reg_tmr0.h"
+//#include "reg_tmr1.h"
+
 // for the debug interface
 #include "common/Uart1.h"
 
 // defines for the timer block
 #define REG_TMR_BASE_ADDR (0x80007000)
 
-#define TMR0_COMP1_REG   (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x00))
+//#define TMR0_COMP1_REG   (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x00))
 #define TMR1_COMP1_REG   (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x20))
 #define TMR2_COMP1_REG   (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x40))
 #define TMR3_COMP1_REG   (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x60))
-#define TMR0_COMP2_REG   (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x02))
+//#define TMR0_COMP2_REG   (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x02))
 #define TMR1_COMP2_REG   (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x22))
 #define TMR2_COMP2_REG   (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x42))
 #define TMR3_COMP2_REG   (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x62))
-#define TMR0_CAPT_REG    (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x04))
+//#define TMR0_CAPT_REG    (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x04))
 #define TMR1_CAPT_REG    (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x24))
 #define TMR2_CAPT_REG    (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x44))
 #define TMR3_CAPT_REG    (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x64))
-#define TMR0_LOAD_REG    (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x06))
+//#define TMR0_LOAD_REG    (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x06))
 #define TMR1_LOAD_REG    (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x26))
 #define TMR2_LOAD_REG    (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x46))
 #define TMR3_LOAD_REG    (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x66))
-#define TMR0_HOLD_REG    (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x08))
+//#define TMR0_HOLD_REG    (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x08))
 #define TMR1_HOLD_REG    (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x28))
 #define TMR2_HOLD_REG    (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x48))
 #define TMR3_HOLD_REG    (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x68))
-#define TMR0_CNTR_REG    (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x0A))
+//#define TMR0_CNTR_REG    (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x0A))
 #define TMR1_CNTR_REG    (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x2A))
 #define TMR2_CNTR_REG    (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x4A))
 #define TMR3_CNTR_REG    (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x6A))
-#define TMR0_CTRL_REG    (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x0C))
+//#define TMR0_CTRL_REG    (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x0C))
 #define TMR1_CTRL_REG    (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x2C))
 #define TMR2_CTRL_REG    (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x4C))
 #define TMR3_CTRL_REG    (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x6C))
-#define TMR0_SCTRL_REG   (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x0E))
+//#define TMR0_SCTRL_REG   (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x0E))
 #define TMR1_SCTRL_REG   (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x2E))
 #define TMR2_SCTRL_REG   (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x4E))
 #define TMR3_SCTRL_REG   (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x6E))
-#define TMR0_CMPLD1_REG  (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x10))
+//#define TMR0_CMPLD1_REG  (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x10))
 #define TMR1_CMPLD1_REG  (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x30))
 #define TMR2_CMPLD1_REG  (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x50))
 #define TMR3_CMPLD1_REG  (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x70))
-#define TMR0_CMPLD2_REG  (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x12))
+//#define TMR0_CMPLD2_REG  (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x12))
 #define TMR1_CMPLD2_REG  (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x32))
 #define TMR2_CMPLD2_REG  (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x52))
 #define TMR3_CMPLD2_REG  (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x72))
-#define TMR0_CSCTRL_REG  (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x14))
+//#define TMR0_CSCTRL_REG  (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x14))
 #define TMR1_CSCTRL_REG  (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x34))
 #define TMR2_CSCTRL_REG  (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x54))
 #define TMR3_CSCTRL_REG  (*(volatile uint16_t *)(REG_TMR_BASE_ADDR + 0x74))
@@ -82,13 +86,13 @@ TimerInit(void)
     //    - count repeatedly and reinitializes once compare reached
     //    - count up
     //    - no co_init and no OFLAG
-    TMR0_CTRL_REG = (8<<9)|(0<<6)|(1<<5)|(0<<4)|(0<<3)|(0);
-    TMR0_SCTRL_REG = 0;
-    TMR0_CSCTRL_REG = 0;
+    tmr0_ctrl_pack(0, 8, 0, 0, 1, 0, 0, 0);
+    tmr0_sctrl_set(0);
+    tmr0_csctrl_set(0);
     //    - upon compare reached, reload to 0
-    TMR0_LOAD_REG = 0;
+    tmr0_load_set(0);
     //    - count up to 24000 to count milliseconds
-    TMR0_COMP1_REG = 24000;
+    tmr0_comp1_set(24000);
 
     // configure timer 1:
     //    - count rising edges
@@ -126,11 +130,11 @@ TimerStart(uint16_t delay)
     TMR1_COMP1_REG = delay;
 
     // reinitialize the timer
-    TMR0_CNTR_REG = 0;
+    tmr0_cntr_set(0);
     TMR1_CNTR_REG = 0;
 
     // start timer 0 millisecond count
-    TMR0_CTRL_REG |= (1<<13);
+    count_mode_setf(1);
     // start timer 1 single shot synchronous
     TMR1_CTRL_REG |= (7<<13);
 }
@@ -139,8 +143,6 @@ void
 TimerStop(void)
 {
     // disable timers 0 and 1
-    // start timer 0 millisecond count
-    TMR0_CTRL_REG &= ~(7<<13);
-    // start timer 1 single shot synchronous
+    count_mode_setf(0);
     TMR1_CTRL_REG &= ~(7<<13);
 }
