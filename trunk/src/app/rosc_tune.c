@@ -116,10 +116,38 @@ void Main(void)
     // initialize the UART1
     Uart1Init();
 
+    // configure timer 0:
+    //    - count rising edges
+    //    - primary source = peripheral clock
+    //    - count repeatedly and reinitializes once compare reached
+    //    - count up
+    //    - no co_init and no OFLAG
+    tmr0_ctrl_pack(1, 8, 0, 0, 0, 0, 0, 0);
+    tmr0_sctrl_set(0);
+    tmr0_csctrl_set(0);
+    //    - upon compare reached, reload to 0
+    tmr0_load_set(0);
+    //    - count up to 24000 to count milliseconds
+    tmr0_comp1_set(24000);
+
     while (1)
     {
+        volatile uint32_t rtc, counter;
 
+        // wait until RTC counter switches
+        while (crm_rtc_count_get() == crm_rtc_count_get()) ;
+
+        // reinit the TMR0 counter
+        tmr0_cntr_set(0);
+
+        // save the current counter
+        rtc = crm_rtc_count_get();
+
+        while (crm_rtc_count_get() != (rtc+4)) ;
+        counter = tmr0_cntr_get();
+
+        Uart1PutS("\n4xRTC = ");
+        Uart1PutU16(counter);
     }
-
 }
 
