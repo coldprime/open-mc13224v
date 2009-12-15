@@ -3,7 +3,7 @@ CC=arm-elf-gcc
 LD=arm-elf-ld
 REG=python ../../tools/reg_xls2h/reg_xls2h.py
 LOAD=python ../../tools/loaduart/loaduart.py
-LOAD_FLAGS ?= -c 7 -p
+LOAD_FLAGS ?= -c 7 -p -b 230400
 BUILDIMAGES=python ../../tools/buildimages/buildimages.py
 
 # register file targets:
@@ -68,6 +68,7 @@ register_files= \
 
 
 # include the specific generation scripts
+-include rosc_tune.mk
 -include rtos.mk
 -include dumpflash_2_0.mk
 -include dumpflash_2_1.mk

@@ -48,10 +48,10 @@ rtos: ../../build/rtos/rtos.elf
 	echo "... Finished building rtos ..."
 
 rtos_install:
-	$(LOAD) $(LOAD_FLAGS) -b 230400 ../../build/rtos/image_ram.bin
+	$(LOAD) $(LOAD_FLAGS) ../../build/rtos/image_ram.bin
 
 rtos_flash:
-	$(LOAD) $(LOAD_FLAGS) -b 230400 ../../flasher_2_1/image_ram.bin ../../build/rtos/image_flash.bin
+	$(LOAD) $(LOAD_FLAGS) ../../flasher_2_1/image_ram.bin ../../build/rtos/image_flash.bin
 
 rtos_clean:
 	rm -rf ../../build/rtos

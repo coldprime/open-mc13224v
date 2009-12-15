@@ -76,6 +76,9 @@ TimerInt(void)
 void
 TimerStart(uint16_t delay)
 {
+    // by default, stop any current timer running
+    TimerStop();
+
     // set the delay in which the timer should expire
     tmr1_comp1_set(delay);
 
@@ -95,4 +98,10 @@ TimerStop(void)
     // disable timers 0 and 1
     tmr0_count_mode_setf(0);
     tmr1_count_mode_setf(0);
+}
+
+uint16_t
+TimerGet(void)
+{
+    return tmr1_cntr_get();
 }

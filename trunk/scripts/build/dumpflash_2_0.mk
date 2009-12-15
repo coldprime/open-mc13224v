@@ -40,10 +40,10 @@ dumpflash_2_0: ../../build/dumpflash_2_0/dumpflash_2_0.elf
 	echo "... Finished building dumpflash_2_0 ..."
 
 dumpflash_2_0_install:
-	$(LOAD) $(LOAD_FLAGS) -b 230400 ../../build/dumpflash_2_0/image_ram.bin
+	$(LOAD) $(LOAD_FLAGS) ../../build/dumpflash_2_0/image_ram.bin
 
 dumpflash_2_0_flash:
-	$(LOAD) $(LOAD_FLAGS) -b 230400 ../../flasher_2_1/image_ram.bin ../../build/dumpflash_2_0/image_flash.bin
+	$(LOAD) $(LOAD_FLAGS) ../../flasher_2_1/image_ram.bin ../../build/dumpflash_2_0/image_flash.bin
 
 dumpflash_2_0_clean:
 	rm -rf ../../build/dumpflash_2_0

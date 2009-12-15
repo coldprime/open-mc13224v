@@ -40,10 +40,10 @@ flasher_2_1: ../../build/flasher_2_1/flasher_2_1.elf
 	echo "... Finished building flasher_2_1 ..."
 
 flasher_2_1_install:
-	$(LOAD) $(LOAD_FLAGS) -b 230400 ../../build/flasher_2_1/image_ram.bin
+	$(LOAD) $(LOAD_FLAGS) ../../build/flasher_2_1/image_ram.bin
 
 flasher_2_1_flash:
-	$(LOAD) $(LOAD_FLAGS) -b 230400 ../../flasher_2_1/image_ram.bin ../../build/flasher_2_1/image_flash.bin
+	$(LOAD) $(LOAD_FLAGS) ../../flasher_2_1/image_ram.bin ../../build/flasher_2_1/image_flash.bin
 
 flasher_2_1_clean:
 	rm -rf ../../build/flasher_2_1

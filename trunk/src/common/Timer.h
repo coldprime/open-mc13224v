@@ -52,6 +52,11 @@ TimerStart(uint16_t delay);
 extern void
 TimerStop(void);
 
-
+/**
+ * Get the current timer value.
+ * @return The current timer value in milliseconds.
+ */
+extern uint16_t
+TimerGet(void);
 
 #endif // _TIMER_H_

@@ -21,11 +21,12 @@
 #include "proc/proc.h"
 
 #include "common/Uart1.h"
-#include "common/Tmr.h"
 
 #include "reg_gpio.h"
 #include "reg_crm.h"
 #include "reg_itc.h"
+#include "reg_tmr0.h"
+#include "reg_tmr1.h"
 
 
 __FIQ void FiqHandler(void)
@@ -33,7 +34,7 @@ __FIQ void FiqHandler(void)
     uint8_t fiq;
 
     // check were the FIQ is coming from
-    fiq = fivector_getf();
+    fiq = itc_fivector_getf();
 
     switch (fiq)
     {
@@ -92,9 +93,10 @@ InitPlatform(void)
     gpio_data0_set(0);
 
     // ITC configuration:
-    // enable CRM and TMR in interrupt controller
-    intenable_setf((1<<ITC_CRM_INDEX) | (1<<ITC_TMR_INDEX));
-    inttype_setf((1<<ITC_CRM_INDEX) | (1<<ITC_TMR_INDEX));
+    // + disable all interrupts in interrupt controller
+    itc_intenable_setf(0);
+    // + set all interrupts to IRQ
+    itc_inttype_setf(0);
 
     // clear pending interrupts from the CRM after the GPIO PD/PU configuration is stable
     {
@@ -114,9 +116,10 @@ void Main(void)
     // initialize the UART1
     Uart1Init();
 
-    // initialize the timer
-    TmrInit();
+    while (1)
+    {
 
+    }
 
 }
 
