@@ -41,17 +41,19 @@ endif
 ../../build/rtos/rtos.elf: $(rtos_objects)
 	$(LD) $(rtos_LD) -Map $(@:.elf=.map) -o $@ $+ -T ../../scripts/ld/RAMonly.lds
 
+../../build/rtos/image_flash.bin ../../build/rtos/image_ram.bin: ../../build/rtos/rtos.elf
+	@$(BUILDIMAGES) -o $(dir $<)image $<
+
 .PHONY: rtos rtos_clean rtos_install rtos_flash
 .SILENT: rtos rtos_clean rtos_install rtos_flash
 rtos: ../../build/rtos/rtos.elf
-	$(BUILDIMAGES) -o $(dir $<)image $<
 	echo "... Finished building rtos ..."
 
-rtos_install:
-	$(LOAD) $(LOAD_FLAGS) ../../build/rtos/image_ram.bin
+rtos_install: ../../build/rtos/image_ram.bin
+	$(LOAD) $(LOAD_FLAGS) $+
 
-rtos_flash:
-	$(LOAD) $(LOAD_FLAGS) ../../flasher_2_1/image_ram.bin ../../build/rtos/image_flash.bin
+rtos_flash: ../../build/flasher_2_1/image_ram.bin ../../build/rtos/image_flash.bin
+	$(LOAD) $(LOAD_FLAGS) $+
 
 rtos_clean:
 	rm -rf ../../build/rtos

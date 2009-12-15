@@ -33,17 +33,19 @@ flasher_2_1_objects= \
 ../../build/flasher_2_1/flasher_2_1.elf: $(flasher_2_1_objects)
 	$(LD) $(FLASH_2_1_LD) -Map $(@:.elf=.map) -o $@ $+ $(FLASH_2_1_LIBS) -T ../../scripts/ld/RAMROM.lds
 
+../../build/flasher_2_1/image_flash.bin ../../build/flasher_2_1/image_ram.bin: ../../build/flasher_2_1/flasher_2_1.elf
+	@$(BUILDIMAGES) -o $(dir $<)image $<
+
 .PHONY: flasher_2_1 flasher_2_1_clean flasher_2_1_install flasher_2_1_flash
 .SILENT: flasher_2_1 flasher_2_1_clean flasher_2_1_install flasher_2_1_flash
 flasher_2_1: ../../build/flasher_2_1/flasher_2_1.elf
-	$(BUILDIMAGES) -o $(dir $<)image $<
 	echo "... Finished building flasher_2_1 ..."
 
-flasher_2_1_install:
-	$(LOAD) $(LOAD_FLAGS) ../../build/flasher_2_1/image_ram.bin
+flasher_2_1_install: ../../build/flasher_2_1/image_ram.bin
+	$(LOAD) $(LOAD_FLAGS) $+
 
-flasher_2_1_flash:
-	$(LOAD) $(LOAD_FLAGS) ../../flasher_2_1/image_ram.bin ../../build/flasher_2_1/image_flash.bin
+flasher_2_1_flash: ../../build/flasher_2_1/image_ram.bin ../../build/flasher_2_1/image_flash.bin
+	$(LOAD) $(LOAD_FLAGS) $+
 
 flasher_2_1_clean:
 	rm -rf ../../build/flasher_2_1

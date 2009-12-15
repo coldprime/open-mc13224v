@@ -30,17 +30,19 @@ rosc_tune_objects= \
 ../../build/rosc_tune/rosc_tune.elf: $(rosc_tune_objects)
 	$(LD) $(rosc_tune_LD) -Map $(@:.elf=.map) -o $@ $+ -T ../../scripts/ld/RAMonly.lds
 
+../../build/rosc_tune/image_flash.bin ../../build/rosc_tune/image_ram.bin: ../../build/rosc_tune/rosc_tune.elf
+	@$(BUILDIMAGES) -o $(dir $<)image $<
+
 .PHONY: rosc_tune rosc_tune_clean rosc_tune_install rosc_tune_flash
 .SILENT: rosc_tune rosc_tune_clean rosc_tune_install rosc_tune_flash
 rosc_tune: ../../build/rosc_tune/rosc_tune.elf
-	$(BUILDIMAGES) -o $(dir $<)image $<
 	echo "... Finished building rosc_tune ..."
 
-rosc_tune_install:
-	$(LOAD) $(LOAD_FLAGS) ../../build/rosc_tune/image_ram.bin
+rosc_tune_install: ../../build/rosc_tune/image_ram.bin
+	$(LOAD) $(LOAD_FLAGS) $+
 
-rosc_tune_flash:
-	$(LOAD) $(LOAD_FLAGS) ../../flasher_2_1/image_ram.bin ../../build/rosc_tune/image_flash.bin
+rosc_tune_flash: ../../build/flasher_2_1/image_ram.bin ../../build/rosc_tune/image_flash.bin
+	$(LOAD) $(LOAD_FLAGS) $+
 
 rosc_tune_clean:
 	rm -rf ../../build/rosc_tune

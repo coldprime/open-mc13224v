@@ -33,17 +33,19 @@ dumpflash_2_1_objects= \
 ../../build/dumpflash_2_1/dumpflash_2_1.elf: $(dumpflash_2_1_objects)
 	$(LD) $(dumpflash_2_1_LD) -Map $(@:.elf=.map) -o $@ $+ $(dumpflash_2_1_LIBS) -T ../../scripts/ld/RAMROM.lds
 
+../../build/dumpflash_2_1/image_flash.bin ../../build/dumpflash_2_1/image_ram.bin: ../../build/dumpflash_2_1/dumpflash_2_1.elf
+	@$(BUILDIMAGES) -o $(dir $<)image $<
+
 .PHONY: dumpflash_2_1 dumpflash_2_1_clean dumpflash_2_1_install dumpflash_2_1_flash
 .SILENT: dumpflash_2_1 dumpflash_2_1_clean dumpflash_2_1_install dumpflash_2_1_flash
 dumpflash_2_1: ../../build/dumpflash_2_1/dumpflash_2_1.elf
-	$(BUILDIMAGES) -o $(dir $<)image $<
 	echo "... Finished building dumpflash_2_1 ..."
 
-dumpflash_2_1_install:
-	$(LOAD) $(LOAD_FLAGS) ../../build/dumpflash_2_1/image_ram.bin
+dumpflash_2_1_install: ../../build/dumpflash_2_1/image_ram.bin
+	$(LOAD) $(LOAD_FLAGS) $+
 
-dumpflash_2_1_flash:
-	$(LOAD) $(LOAD_FLAGS) ../../flasher_2_1/image_ram.bin ../../build/dumpflash_2_1/image_flash.bin
+dumpflash_2_1_flash: ../../flasher_2_1/image_ram.bin ../../build/dumpflash_2_1/image_flash.bin
+	$(LOAD) $(LOAD_FLAGS) $+
 
 dumpflash_2_1_clean:
 	rm -rf ../../build/dumpflash_2_1
