@@ -69,6 +69,7 @@ register_files= \
 
 # include the specific generation scripts
 -include rosc_tune.mk
+-include xtal32_tune.mk
 -include rtos.mk
 -include dumpflash_2_0.mk
 -include dumpflash_2_1.mk
