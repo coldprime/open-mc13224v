@@ -119,16 +119,12 @@ void Main(void)
     // configure timer 0:
     //    - count rising edges
     //    - primary source = peripheral clock
-    //    - count repeatedly and reinitializes once compare reached
+    //    - count repeatedly
     //    - count up
     //    - no co_init and no OFLAG
     tmr0_ctrl_pack(1, 8, 0, 0, 0, 0, 0, 0);
     tmr0_sctrl_set(0);
     tmr0_csctrl_set(0);
-    //    - upon compare reached, reload to 0
-    tmr0_load_set(0);
-    //    - count up to 24000 to count milliseconds
-    tmr0_comp1_set(24000);
 
     while (1)
     {
