@@ -55,10 +55,11 @@ InitPlatform(void)
     // CRM configuration:
     // + system configuration
     //   * the clock frequency for the whole platform to 24MHz (divider = 0)
+    //   * indicate that the XTAL32 exists (this is an error in the RefMan, it is not R/O)
     //   * JTAG security enforced off
     //   * SPIF uses 1.8
     //   * power source is VBATT
-    crm_sys_cntl_pack(0, 0, 1, 1, 0, 0);
+    crm_sys_cntl_pack(0, 1, 1, 1, 0, 0);
 
     // + wakeup configuration
     //   + enable WU pads and interrupts
@@ -124,10 +125,10 @@ void Main(void)
     Uart1PutU32(*((volatile uint32_t *)0x80004018));
 
     Uart1PutS("\nXTAL32_CNTL = 0x");
-    Uart1PutU16(crm_xtal32_cntl_get());
+    Uart1PutU32(crm_xtal32_cntl_get());
 
     Uart1PutS("\nFIRST = ");
-    Uart1PutU16(crm_rtc_count_get());
+    Uart1PutU32(crm_rtc_count_get());
 
     // configure timer 0:
     //    - count rising edges
@@ -146,8 +147,6 @@ void Main(void)
         // wait until RTC counter switches
         while (crm_rtc_count_get() == crm_rtc_count_get())
         {
-            Uart1PutS("\nRTC = ");
-            Uart1PutU16(crm_rtc_count_get());
         }
 
         // reinit the TMR0 counter
