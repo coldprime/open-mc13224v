@@ -1,7 +1,7 @@
 /*
  * Timer related API
  *
- * This block provides an interface to the system timer.
+ * This block provides an interface to a system timer.
  *
  *    Copyright (C) 2009 Louis Caron
  *
@@ -26,7 +26,7 @@
 #include <stdint.h>
 
 /**
- * Initialize the TMR peripheral.
+ * Initialize the timer API.
  *
  * @warning Peripheral clock is expected to be 24MHz
  */

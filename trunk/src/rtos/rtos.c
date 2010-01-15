@@ -26,8 +26,11 @@
 // processor related macros
 #include "proc/proc.h"
 
-// time and timer related
+// timer related
 #include "common/Timer.h"
+
+// time related
+#include "common/Time.h"
 
 /// RTOS environment
 struct rtos rtos_env;
@@ -103,11 +106,14 @@ static void schedule_timers(void)
 
     for(;;)
     {
+        // get the current time
+        uint32_t now = TimeGet();
+
         // start by clearing the pending event
         rtos_eventclear(RTOS_EVENT(TIMER));
 
         // check the next timer
-        timed = (struct thread_c*)rtos_env.timed;
+        timed = rtos_env.timed;
 
         if (!timed)
         {
@@ -115,16 +121,14 @@ static void schedule_timers(void)
             break;
         }
 
-        // check if timer is set in more than 1 ms
-        if ((timed->timeout.date - 1) > 0)
+        // check if thread has expired or is about to
+        if (((int32_t)(timed->timeout.date - now)) > 32)
         {
-            // timer will expire in more than 1 ms, configure the HW
-            TimerStart(timed->timeout.date);
+            // timer has not yet expired
+            TimerStart((timed->timeout.date - now) / 32);
 
-            // in most case, we will break here. However, if the timer expiration
-            // time has just passed, may be the HW was set too late (due to an IRQ)
-            // so we do not exit the loop to process it.
-            if (timed->timeout.date > 0) break;
+            // timer was set so we exit the loop
+            break;
         }
 
         // at this point, the next thread timeout has expired or is about to
@@ -451,7 +455,49 @@ void *rtos_msg_wait(uint16_t id, uint16_t timeout)
     // check if there was a timeout configured
     if (timeout != 0)
     {
-        //
+        // elements to parse the timed thread list
+        struct thread_c *next;
+        struct thread_c *prev;
+        // get the current time
+        uint32_t now = TimeGet();
+        // compute the delay in number of RTC cycles
+        int32_t delay = timeout * 32;
+        // compute the expiration date
+        uint32_t expiration = now + delay;
+
+
+        // compute the new expiration date
+        rtos_env.threads[rtos_env.thread_cur].timeout.date = expiration;
+
+        // add the timeout in the list of timed threads
+        prev = rtos_env.timed;
+        if ((prev == NULL) || (TimeDiff(prev->timeout.date, now) > delay))
+        {
+            rtos_env.timed = &(rtos_env.threads[rtos_env.thread_cur]);
+            rtos_env.timed->timeout.next = prev;
+        }
+        else
+        {
+            do
+            {
+                // find the next thread in the list
+                next = prev->timeout.next;
+
+                // if the next one is NULL, then exit (end of the list)
+                if (next == NULL)
+                    break;
+                // check if the next one should expire after the new one
+                if (delay < TimeDiff(next->timeout.date, now))
+                    break;
+
+                // move to the next one in the list
+                prev = next;
+            } while (1);
+
+            // insert the new item between the prev and the next
+            rtos_env.threads[rtos_env.thread_cur].timeout.next = next;
+            prev->timeout.next = &(rtos_env.threads[rtos_env.thread_cur]);
+        }
     }
 
     // wait for the expected message

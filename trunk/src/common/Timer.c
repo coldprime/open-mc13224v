@@ -1,5 +1,7 @@
 /*
- * Timer related API
+ * Timer related API implementation.
+ *
+ * This implementation in the MC13224V chip uses TMR0 and TMR1.
  *
  *    Copyright (C) 2009 Louis Caron
  *
