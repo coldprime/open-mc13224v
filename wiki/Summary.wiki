@@ -59,3 +59,4 @@ The structure of the project should help locate the files you are looking for:
 Most documentation should be found in the wiki pages:
  * RetroEngineering : main page for retro engineering process of the ROM 2.1 and MACPHY.a functions
  * ArmSuite : how to build the ARM free compilation and debugging suite from GNU
+ * SystemC : how to build SystemC for Cygwin
