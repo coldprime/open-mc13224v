@@ -24,7 +24,7 @@ The requirements for this project are:
  * USB port
 
 Optional:
- * Eclipse 3.2+ : the project is also an eclipse project but it is not required to use it.  I do because it integrates in a single application many applications I need (IDE, debugger, SVN interface).  Ther project has only one build target (all) that builds all the applications.
+ * Eclipse 3.2+ : the project is also an eclipse project but it is not required to use it.  I do use it because it integrates in a single application many applications I need (IDE, debugger, SVN interface).  The eclipse project has only one build target (all) that builds all the sample applications.
 
 = Project Structure =
 The structure of the project should help locate the files you are looking for:
