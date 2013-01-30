@@ -30,7 +30,6 @@ usage: loaduart.py [-h|--help] [-v] [-c numport] [-b baudrate] [-n] file1 file2 
        -c numport: com port number (default is COM1)
        -b baudrate: baudrate (default is 115200)
        -n: do not wait for the CONNECT keyword
-       -p: continuous print
        file1 file2 ... : list of files to load (first is expected to be from BOOTLOADER flow)
     """
 
@@ -48,7 +47,6 @@ def main():
     comport = 0
     baudrate = 115200
     connected = False
-    continous = False
     for o, a in opts:
         if o in ["--help", "-h"]:
             usage()
@@ -57,8 +55,6 @@ def main():
             verbose = True
         if o == "-n":
             connected = True
-        if o == "-p":
-            continous = True
         if o == "-c":
             try:
                 comport = int(a, 0)
@@ -131,33 +127,22 @@ def main():
                     counter+=len(sent)
                     sys.stdout.write(". "*((counter+len(sent))/100 - (counter/100)))
 
-            # loop as long as the user wants
+            # if this is the last file of the list, just leave 
+            if f == args[-1]:
+                break
             indication = "x"
             while (indication != "n"):
                 # read the maximum amount of characters
-                response = ser.read(10000)
+                response = ser.read(400)
+                sys.stdout.write(response)
 
-                if continous:
-                    sys.stdout.write(response)
-
-                else:
-                    # check if there was a timeout
-                    if response == "":
-                        print("Timeout")
-                    else:
-                        print(response)
-
-                    # wait for an indication from user
-                    indication = raw_input("press 'n' for next download -->")
+                # wait for an indication from user
+                indication = raw_input("press 'n' for next download -->")
 
         while (True):
             # read the maximum amount of characters
             response = ser.read(10000)
-            # check if there was a timeout
-            if response == "":
-                print("Timeout")
-            else:
-                print(response)
+            sys.stdout.write(response)
 
     except KeyboardInterrupt:
         ser.close()
