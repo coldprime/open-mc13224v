@@ -1,9 +1,10 @@
 # define the build tools
-CC=arm-elf-gcc
-LD=arm-elf-ld
+CC=/cygdrive/c/arm-eabi-tools/gcc-4.4.3/bin/arm-eabi-gcc
+LD=/cygdrive/c/arm-eabi-tools/gcc-4.4.3/bin/arm-eabi-ld
 REG=python ../../tools/reg_xls2h/reg_xls2h.py
 LOAD=python ../../tools/loaduart/loaduart.py
-LOAD_FLAGS ?= -c 7 -p -b 230400
+# the baudrate 230400 corresponds to the value configured in Uart1.c
+LOAD_FLAGS ?= -c 8 -b 230400
 BUILDIMAGES=python ../../tools/buildimages/buildimages.py
 
 # register file targets:
@@ -71,6 +72,7 @@ register_files= \
 -include rosc_tune.mk
 -include xtal32_tune.mk
 -include rtos.mk
+-include gen_pattern.mk
 -include dumpflash_2_0.mk
 -include dumpflash_2_1.mk
 -include flasher_2_1.mk
