@@ -28,6 +28,11 @@
 #include "reg_tmr0.h"
 #include "reg_tmr1.h"
 
+// defines necessary for the ITC block
+#define ITC_CRM_INDEX (3)
+
+// use GPIO8 (TMR0) as the VSYNC output
+#define VSYNC_OUT_GPIO (8)
 
 __FIQ void FiqHandler(void)
 {
@@ -38,9 +43,32 @@ __FIQ void FiqHandler(void)
 
     switch (fiq)
     {
+    case ITC_CRM_INDEX:
+        fiq = crm_ext_wu_evt_getf();
+        Uart1PutS("\nCRM FIQ");
+
+        if (fiq & 1)
+        {
+            Uart1PutS("\nPB0");
+        }
+        if (fiq & 2)
+        {
+            Uart1PutS("\nPB1");
+        }
+        if (fiq & 4)
+        {
+            Uart1PutS("\nPB2");
+        }
+        if (fiq & 8)
+        {
+            Uart1PutS("\nPB3");
+        }
+        // clear any pending interrupt
+        crm_status_set(0xFFFF);
+        break;
+        
     default:
         Uart1PutS("\nUnsupported FIQ");
-        ASSERT(0);
         break;
     }
 }
@@ -76,27 +104,27 @@ InitPlatform(void)
 
     // GPIO configuration:
     // + direction configuration
-    //   * configure the GPIOs 25-23 as output (KBI3-KBI1), connect to LED control
-    gpio_pad_dir0_set(7 << 23);
+    //   * configure the GPIOs 25-23 as output (KBI[3..1]), connected to LED control
+    //   * configure the VSYNC out GPIO as well
+    gpio_pad_dir0_set((7 << 23) | (1 << VSYNC_OUT_GPIO));
 
     // + function configuration
     //   * configure the GPIO15-14 to UART1 (UART1 TX and RX)
     gpio_func_sel0_set((0x01 << (14*2)) | (0x01 << (15*2)));
 
     // + pull up configuration
-    //   * enable the PU on the KBI[7..4] pads
+    //   * enable the PU on the GPIO 29-26 (KBI[7..4]), connected to PushButtons
     gpio_pad_pu_en0_set(gpio_pad_pu_en0_get() | (0xF<<26));
     gpio_pad_pu_sel0_set(gpio_pad_pu_sel0_get() | (0xF<<26));
 
     // + init data configuration
-    //   * clear the LEDs
+    //   * turn on the red LED
     gpio_data0_set(1<<23);
 
     // ITC configuration:
-    // + disable all interrupts in interrupt controller
-    itc_intenable_setf(0);
-    // + set all interrupts to IRQ
-    itc_inttype_setf(0);
+    // enable CRM and TMR in interrupt controller
+    itc_intenable_setf((1<<ITC_CRM_INDEX));
+    itc_inttype_setf((1<<ITC_CRM_INDEX));
 
     // clear pending interrupts from the CRM after the GPIO PD/PU configuration is stable
     {
@@ -104,7 +132,6 @@ InitPlatform(void)
         while (toto++ < 10000) ;
     }
     crm_status_set(0xFFFF);
-
 }
 
 
@@ -119,6 +146,9 @@ void Main(void)
 
     // initialize the UART1
     Uart1Init();
+
+    // release the interrupts
+    PROC_INT_START();
 
     // configure timer 0:
     //    - count rising edges
@@ -140,7 +170,7 @@ void Main(void)
         {
         case 0:
             limit = 2;
-            value = 1 << 23;
+            value = 1;
             state = 1;
             break;
         case 1:
@@ -154,7 +184,7 @@ void Main(void)
             break;
         case 2:
             limit = 2;
-            value = 1 << 23;
+            value = 1;
             state = 3;
             break;
         case 3:
@@ -164,7 +194,7 @@ void Main(void)
             break;
         case 4:
             limit = 2;
-            value = 1 << 23;
+            value = 1;
             state = 5;
             break;
         case 5:
@@ -180,8 +210,15 @@ void Main(void)
         }
         
         while (tmr0_cntr_get() < limit) ;
-        
-        gpio_data0_set(value);
+
+        if (value)
+        {
+            gpio_data_set0_set(1 << VSYNC_OUT_GPIO);
+        }
+        else
+        {
+            gpio_data_reset0_set(1 << VSYNC_OUT_GPIO);
+        }
     }
 }
 
