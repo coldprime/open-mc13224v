@@ -22,4 +22,6 @@ Steps to quickly start up on the MC13224V using this project.
   * flash the sample application in the module embedded flash (gen_pattern):
     * {{{make gen_pattern_flash}}}
   * erase the module embedded flash:
-    * set the S2 switch 1-OFF, 2-ON (S2 is labled ERASE on the !RedBee module)
+    * set the S2 switch 1-OFF, 2-ON (S2 is labeled ERASE on the !RedBee module)
+    * press the "RESET" button on the !RedBee module
+    * the LED should now be bright white indicating that it is likely to run on the ROM
