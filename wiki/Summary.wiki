@@ -47,8 +47,8 @@ The structure of the project should help locate the files you are looking for:
   * simu/ : simulation scripts (describe the platform, rom and flash content), the SystemC (TLM 2.0) based simulation tool can not be made public for the time being
  * src/ : all the source files necessary for the various targets
  * thirdparty/ : elements that come from other sources
-  * BeeKit/ : elements that come from the FreeScale BeekKit environment
-   * MyStarNetwork Demo (Coordinator)/ : demo software from MAC codebase
+  * !BeeKit/ : elements that come from the !FreeScale !BeekKit environment
+   * !MyStarNetwork Demo (Coordinator)/ : demo software from MAC codebase
    * Weather Station Controller/ : demo software from SMAC codebase
  * tools/ : set of tools (can be required or not in the build process)
   * buildimages/ : tool that builds RAM and FLASH images from ELF for download on the chip
