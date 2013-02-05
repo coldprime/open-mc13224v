@@ -79,7 +79,7 @@ def main():
     if not connected:
         # force the RTS line to detect the UART boot type in the ROM flow
         ser.setRTS(True)
-        print("Please reset the board to detect COM port RTS line...")
+        print("Reset the board to allow the MC13224V to detect COM port RTS line...")
 
     try:
         while (not connected):
@@ -87,12 +87,10 @@ def main():
             ser.write("\x00")
             # wait for a response
             response = ser.read(7)
-            print(str(len(response)) + response)
             if response == "CONNECT":
+                print("Connection successful")
                 connected = True
 
-        # by default, load the next file without acknowledgment
-        indication = "x"
         # loop on all the files
         for f in args:
             # open and read the image file file
@@ -104,8 +102,8 @@ def main():
             # write the length of the file to the UART
             ser.write(struct.pack("<L", len(data)))
 
-            # if this is the first file, load quickly otherwise wait for confirmation
-            if indication == "x":
+            # if this is the first file, load at once
+            if f == args[0]:
                 ser.write(data)
             else:
                 counter = 0
@@ -139,6 +137,7 @@ def main():
                 # wait for an indication from user
                 indication = raw_input("press 'n' for next download -->")
 
+        print("Finished loading files -> monitoring UART")
         while (True):
             # read the maximum amount of characters
             response = ser.read(10000)
