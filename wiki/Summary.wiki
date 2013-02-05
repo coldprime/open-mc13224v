@@ -42,7 +42,7 @@ The structure of the project should help locate the files you are looking for:
    * Makefile : file that generates the header files from the XLS register files
  * libraries/ : library files
  * scripts/ : script files
-  * build/ : build scripts for all the targets of the project
+  * build/ : build scripts for all the targets of the project (including makefiles)
   * ld/ : link scripts
   * simu/ : simulation scripts (describe the platform, rom and flash content), the SystemC (TLM 2.0) based simulation tool can not be made public for the time being
  * src/ : all the source files necessary for the various targets
@@ -56,7 +56,8 @@ The structure of the project should help locate the files you are looking for:
   * reg_xls2h/ : tool to build the register description header files from register XLS files
 
 = Documentation =
-Most documentation should be found in the wiki pages:
+Most of the documentation should be found in the wiki pages:
+ * QuickStartupGuide : easy steps to start developing an application fir MC13224V
  * RetroEngineering : main page for retro engineering process of the ROM 2.1 and MACPHY.a functions
  * ArmSuite : how to build the ARM free compilation and debugging suite from GNU
  * [SystemC SystemC] : how to build SystemC for Cygwin
