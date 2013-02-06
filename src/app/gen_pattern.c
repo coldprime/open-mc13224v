@@ -1,7 +1,7 @@
 /*
  * Generate a pattern on a GPIO
  *
- *    Copyright (C) 2013 Louis Caron
+ *    Copyright (C) 2009-2013 Louis Caron
  *
  *    This program is free software: you can redistribute it and/or modify
  *    it under the terms of the GNU General Public License as published by
@@ -34,6 +34,12 @@
 // use GPIO8 (TMR0) as the VSYNC output
 #define VSYNC_OUT_GPIO (8)
 
+// VSYNC period (24 Mhz/ (128 * 3125) = 60)
+volatile uint32_t vsync_period = 3125;
+// number of edges
+volatile uint32_t vsync_pulses = 0;
+
+
 __FIQ void FiqHandler(void)
 {
     uint8_t fiq;
@@ -45,30 +51,52 @@ __FIQ void FiqHandler(void)
     {
     case ITC_CRM_INDEX:
         fiq = crm_ext_wu_evt_getf();
-        Uart1PutS("\nCRM FIQ");
+        Uart1PutS("CRM FIQ\n");
 
         if (fiq & 1)
         {
-            Uart1PutS("\nPB0");
+            Uart1PutS("60Hz\n");
+            gpio_data_set0_set(1 << 23);
+            gpio_data_reset0_set(6 << 23);
+            // VSYNC period (24 Mhz/ (128 * 3125) = 60)
+            vsync_period = 3125;
         }
         if (fiq & 2)
         {
-            Uart1PutS("\nPB1");
+            Uart1PutS("50Hz\n");
+            gpio_data_set0_set(2 << 23);
+            gpio_data_reset0_set(5 << 23);
+            // VSYNC period (24 Mhz/ (128 * 3750) = 50)
+            vsync_period = 3750;
         }
         if (fiq & 4)
         {
-            Uart1PutS("\nPB2");
+            Uart1PutS("48Hz\n");
+            gpio_data_set0_set(4 << 23);
+            gpio_data_reset0_set(3 << 23);
+            // VSYNC period (24 Mhz/ (128 * 3906) = 48)
+            vsync_period = 3906;
         }
         if (fiq & 8)
         {
-            Uart1PutS("\nPB3");
+            if (vsync_pulses)
+            {
+                vsync_pulses = 0;
+                Uart1PutS("1 pulse\n");
+            }
+            else
+            {
+                vsync_pulses = 1;
+                Uart1PutS("3 pulses\n");
+            }
         }
+
         // clear any pending interrupt
         crm_status_set(0xFFFF);
         break;
         
     default:
-        Uart1PutS("\nUnsupported FIQ");
+        Uart1PutS("Unsupported FIQ\n");
         break;
     }
 }
@@ -160,65 +188,75 @@ void Main(void)
     tmr0_sctrl_set(0);
     tmr0_csctrl_set(0);
 
-    state = 0;
     while (1)
     {
         // reinit the TMR0 counter
         tmr0_cntr_set(0);
+        state = 0;
 
-        switch (state)
+        do
         {
-        case 0:
-            limit = 2;
-            value = 1;
-            state = 1;
-            break;
-        case 1:
-            limit = 3;
-            value = 0;
-            // 3 pulses option
-            state = 2;
-            
-            // 1 pulse option
-            //state = 6;
-            break;
-        case 2:
-            limit = 2;
-            value = 1;
-            state = 3;
-            break;
-        case 3:
-            limit = 3;
-            value = 0;
-            state = 4;
-            break;
-        case 4:
-            limit = 2;
-            value = 1;
-            state = 5;
-            break;
-        case 5:
-            limit = 3;
-            value = 0;
-            state = 6;
-            break;
-        case 6:
-            limit = 3125;
-            value = 0;
-            state = 0;
-            break;
-        }
-        
-        while (tmr0_cntr_get() < limit) ;
+            switch (state)
+            {
+            case 0:
+                limit = 2;
+                value = 1;
+                state = 1;
+                break;
+            case 1:
+                limit = 4;
+                value = 0;
+                if (vsync_pulses)
+                {
+                    // 3 pulses option
+                    state = 2;
+                }
+                else
+                {
+                    // 1 pulse option
+                    state = 6;
+                }
+                break;
+            case 2:
+                limit = 6;
+                value = 1;
+                state = 3;
+                break;
+            case 3:
+                limit = 8;
+                value = 0;
+                state = 4;
+                break;
+            case 4:
+                limit = 10;
+                value = 1;
+                state = 5;
+                break;
+            case 5:
+                limit = 12;
+                value = 0;
+                state = 6;
+                break;
+            case 6:
+                limit = vsync_period;
+                value = 0;
+                state = 0;
+                break;
+            }
 
-        if (value)
-        {
-            gpio_data_set0_set(1 << VSYNC_OUT_GPIO);
-        }
-        else
-        {
-            gpio_data_reset0_set(1 << VSYNC_OUT_GPIO);
-        }
+            // toggle high or low?
+            if (value)
+            {
+                gpio_data_set0_set(1 << VSYNC_OUT_GPIO);
+            }
+            else
+            {
+                gpio_data_reset0_set(1 << VSYNC_OUT_GPIO);
+            }
+            // wait for the limit to be reached
+            while (tmr0_cntr_get() < limit) ;
+    
+        } while (state != 0);
     }
 }
 
