@@ -4,7 +4,7 @@ LD=/cygdrive/c/arm-eabi-tools/gcc-4.4.3/bin/arm-eabi-ld
 REG=python ../../tools/reg_xls2h/reg_xls2h.py
 LOAD=python ../../tools/loaduart/loaduart.py
 # the baudrate 230400 corresponds to the value configured in Uart1.c
-LOAD_FLAGS ?= -c 8 -b 230400
+LOAD_FLAGS ?= -c 10 -b 230400
 BUILDIMAGES=python ../../tools/buildimages/buildimages.py
 
 # register file targets:
@@ -52,6 +52,10 @@ BUILDIMAGES=python ../../tools/buildimages/buildimages.py
 ../../src/build/registers/reg_tmr3.h: ../../docs/registers/TMR.xls
 	mkdir -p $(dir $@)
 	$(REG) --short $< "TMR3_" 0x80007060 $@
+## ADC
+../../src/build/registers/reg_adc.h: ../../docs/registers/ADC.xls
+	mkdir -p $(dir $@)
+	$(REG) --short $< "ADC_" 0x8000D000 $@
 
 # list of the generated register
 register_files= \
@@ -65,17 +69,12 @@ register_files= \
 	../../src/build/registers/reg_tmr0.h \
 	../../src/build/registers/reg_tmr1.h \
 	../../src/build/registers/reg_tmr2.h \
-	../../src/build/registers/reg_tmr3.h
+	../../src/build/registers/reg_tmr3.h \
+	../../src/build/registers/reg_adc.h \
 
 
 # include the specific generation scripts
--include rosc_tune.mk
--include xtal32_tune.mk
--include rtos.mk
--include gen_pattern.mk
--include dumpflash_2_0.mk
--include dumpflash_2_1.mk
--include flasher_2_1.mk
+-include *.mk
 
 .DEFAULT_GOAL=default
 .SILENT: default all nuke regs
