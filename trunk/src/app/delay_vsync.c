@@ -33,12 +33,8 @@
 
 // use GPIO8 (TMR0) as the VSYNC output
 #define VSYNC_OUT_GPIO (8)
-
-// VSYNC period (24 Mhz/ (128 * 3125) = 60)
-volatile uint32_t vsync_period = 3125;
-// number of edges
-volatile uint32_t vsync_pulses = 0;
-
+// use GPIO9 (TMR1) as the VSYNC input
+#define VSYNC_IN_GPIO (9)
 
 __FIQ void FiqHandler(void)
 {
@@ -55,40 +51,25 @@ __FIQ void FiqHandler(void)
 
         if (fiq & 1)
         {
-            Uart1PutS("60Hz\n");
+            Uart1PutS("PB0\n");
             gpio_data_set0_set(1 << 23);
             gpio_data_reset0_set(6 << 23);
-            // VSYNC period (24 Mhz/ (128 * 3125) = 60)
-            vsync_period = 3125;
         }
         if (fiq & 2)
         {
-            Uart1PutS("50Hz\n");
+            Uart1PutS("PB1\n");
             gpio_data_set0_set(2 << 23);
             gpio_data_reset0_set(5 << 23);
-            // VSYNC period (24 Mhz/ (128 * 3750) = 50)
-            vsync_period = 3750;
         }
         if (fiq & 4)
         {
-            Uart1PutS("48Hz\n");
+            Uart1PutS("PB2\n");
             gpio_data_set0_set(4 << 23);
             gpio_data_reset0_set(3 << 23);
-            // VSYNC period (24 Mhz/ (128 * 3906) = 48)
-            vsync_period = 3906;
         }
         if (fiq & 8)
         {
-            if (vsync_pulses)
-            {
-                vsync_pulses = 0;
-                Uart1PutS("1 pulse\n");
-            }
-            else
-            {
-                vsync_pulses = 1;
-                Uart1PutS("3 pulses\n");
-            }
+            Uart1PutS("PB3\n");
         }
 
         // clear any pending interrupt
@@ -133,12 +114,18 @@ InitPlatform(void)
     // GPIO configuration:
     // + direction configuration
     //   * configure the GPIOs 25-23 as output (KBI[3..1]), connected to LED control
-    //   * configure the VSYNC out GPIO as well
+    //   * configure the VSYNC out GPIO as output
+    //   * configure the VSYNC in GPIO as output
     gpio_pad_dir_set0_set((7 << 23) | (1 << VSYNC_OUT_GPIO));
+    gpio_pad_dir_reset0_set(1 << VSYNC_IN_GPIO);
 
     // + function configuration
     //   * configure the GPIO15-14 to UART1 (UART1 TX and RX)
     gpio_func_sel0_set((0x01 << (14*2)) | (0x01 << (15*2)));
+    
+    // + data select
+    //   * read the VSYNC IN from the GPIO
+    gpio_data_sel0_set(gpio_data_sel0_get() & (~(1 << VSYNC_IN_GPIO)));
 
     // + pull up configuration
     //   * enable the PU on the GPIO 29-26 (KBI[7..4]), connected to PushButtons
@@ -165,10 +152,8 @@ InitPlatform(void)
 
 void Main(void)
 {
-    int state;
-    uint16_t limit;
-    uint32_t value;
-
+    uint32_t value, prev_value, state;
+    
     // initialize the whole platform
     InitPlatform();
 
@@ -196,67 +181,24 @@ void Main(void)
 
         do
         {
-            switch (state)
+            // read the value of TIMER1
+            value = gpio_data0_get() & (1 << VSYNC_IN_GPIO);
+            
+            if (prev_value != value)
             {
-            case 0:
-                limit = 2;
-                value = 1;
-                state = 1;
-                break;
-            case 1:
-                limit = 4;
-                value = 0;
-                if (vsync_pulses)
+                prev_value = value;
+                if (value)
                 {
-                    // 3 pulses option
-                    state = 2;
+                    gpio_data_set0_set(1 << VSYNC_OUT_GPIO);
                 }
                 else
                 {
-                    // 1 pulse option
-                    state = 6;
+                    gpio_data_reset0_set(1 << VSYNC_OUT_GPIO);
                 }
-                break;
-            case 2:
-                limit = 6;
-                value = 1;
-                state = 3;
-                break;
-            case 3:
-                limit = 8;
-                value = 0;
-                state = 4;
-                break;
-            case 4:
-                limit = 10;
-                value = 1;
-                state = 5;
-                break;
-            case 5:
-                limit = 12;
-                value = 0;
-                state = 6;
-                break;
-            case 6:
-                limit = vsync_period;
-                value = 0;
-                state = 0;
-                break;
+
             }
 
-            // toggle high or low?
-            if (value)
-            {
-                gpio_data_set0_set(1 << VSYNC_OUT_GPIO);
-            }
-            else
-            {
-                gpio_data_reset0_set(1 << VSYNC_OUT_GPIO);
-            }
-            // wait for the limit to be reached
-            while (tmr0_cntr_get() < limit) ;
-    
-        } while (state != 0);
+        } while (state == 0);
     }
 }
 
