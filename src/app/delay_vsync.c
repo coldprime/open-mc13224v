@@ -27,6 +27,7 @@
 #include "reg_itc.h"
 #include "reg_tmr0.h"
 #include "reg_tmr1.h"
+#include "reg_adc.h"
 
 // defines necessary for the ITC block
 #define ITC_CRM_INDEX (3)
@@ -140,10 +141,26 @@ InitPlatform(void)
     // enable CRM and TMR in interrupt controller
     itc_intenable_setf((1<<ITC_CRM_INDEX));
     itc_inttype_setf((1<<ITC_CRM_INDEX));
+    
+    
+    // ADC configuration
+    // 
+    //  + prescale = 23 -> prescale clock = 1MHz
+    //  + clock_divider = 80 -> ADC clock = 300kHz
+    //  + on time = 10 * 1MHz = 10 us
+    //  + ADC on, voltage ref is VBAT, no IRQ
+    //  + force ADC1 on, bit 5
+    adc_control_pack(0, 0, 0, 0, 0, 0, 0, 0, 0, 1);
+    adc_clock_divider_set(80);
+    adc_prescale_set(23);
+    adc_on_time_set(10);
+    adc_convert_time_set(20);
+    adc_mode_set(OVERRIDE_BIT);
+    adc_override_pack(0, 1, 0, 5);
 
     // clear pending interrupts from the CRM after the GPIO PD/PU configuration is stable
     {
-        volatile uint32_t toto =0;
+        volatile uint32_t toto = 0;
         while (toto++ < 10000) ;
     }
     crm_status_set(0xFFFF);
@@ -153,6 +170,7 @@ InitPlatform(void)
 void Main(void)
 {
     uint32_t value, prev_value, state;
+    uint16_t adc, prev_adc;
     
     // initialize the whole platform
     InitPlatform();
@@ -176,7 +194,6 @@ void Main(void)
     while (1)
     {
         // reinit the TMR0 counter
-        tmr0_cntr_set(0);
         state = 0;
 
         do
@@ -186,6 +203,20 @@ void Main(void)
             
             if (prev_value != value)
             {
+                adc = adc_ad1_result_get();
+                
+#if 0
+                if (((adc - prev_adc) > 10) || ((prev_adc - adc) > 10)) 
+                {
+                    prev_adc = adc;
+                    Uart1PutS("ADC = ");
+                    Uart1PutU16(adc);
+                    Uart1PutC('\n');
+                }
+#endif
+                tmr0_cntr_set(0);
+                while (tmr0_cntr_get() < adc);
+
                 prev_value = value;
                 if (value)
                 {
@@ -195,7 +226,6 @@ void Main(void)
                 {
                     gpio_data_reset0_set(1 << VSYNC_OUT_GPIO);
                 }
-
             }
 
         } while (state == 0);
