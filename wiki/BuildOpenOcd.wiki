@@ -21,4 +21,9 @@ Compile openocd:
 ./configure --enable-jlink --enable-ftdi LIBUSB1_CFLAGS="-I<yourpathtolibusb>/libusb-1.0.9/libusb" LIBUSB1_LIBS="-L<yourpathtolibusb>/libusb-1.0.9/libusb -lusb-1.0
 }}}
 
-  * build: make
+  * build: `make`
+  * install: `sudo make install`
+
+At this point, the following information was populated:
+  * `/usr/local/bin/` : openocd executable
+  * `/usr/local/share/openocd` : all scripts, definition files, firmwares for openocd
