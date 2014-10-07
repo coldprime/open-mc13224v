@@ -16,5 +16,9 @@ Compile libusb-1.0.9:
   * make
 
 Compile openocd:
-  * ./configure --enable-jlink --enable-ftdi LIBUSB1_CFLAGS=" " LIBUSB1_LIBS="-lusb"
-  * be careful in the above line not to put an empty string in LIBUSB1_CFLAGS
+  * Build configuration:
+{{{
+./configure --enable-jlink --enable-ftdi LIBUSB1_CFLAGS="-I<yourpathtolibusb>/libusb-1.0.9/libusb" LIBUSB1_LIBS="-L<yourpathtolibusb>/libusb-1.0.9/libusb -lusb-1.0
+}}}
+
+  * build: make
