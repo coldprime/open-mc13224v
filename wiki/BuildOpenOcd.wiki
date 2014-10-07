@@ -15,4 +15,6 @@ Compile libusb-1.0.9:
   * ./configure --enable-static
   * make
 
-Compile
+Compile openocd:
+  * ./configure --enable-jlink --enable-ftdi LIBUSB1_CFLAGS=" " LIBUSB1_LIBS="-lusb"
+  * be careful in the above line not to put an empty string in LIBUSB1_CFLAGS
