@@ -1,0 +1,18 @@
+#summary Steps to build openocd-0.8.0 for ftdi um232h on Ubuntu 12.04.
+
+= Introduction =
+
+Build steps.
+
+
+= Details =
+
+The following steps:
+  * download openocd-0.8.0
+  * download libusb-1.0.9
+
+Compile libusb-1.0.9:
+  * ./configure --enable-static
+  * make
+
+Compile
